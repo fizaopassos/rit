@@ -1,0 +1,409 @@
+// RIT — Retha + IT
+// Schema inicial de controle de ativos de TI (substitui o GLPI)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum TipoEquipamento {
+  NOTEBOOK
+  DESKTOP
+  TELEFONE_VOIP
+  SMARTPHONE
+  MONITOR
+  IMPRESSORA
+  OUTRO
+}
+
+enum StatusEquipamento {
+  EM_ESTOQUE
+  EM_USO
+  EM_MANUTENCAO
+  BAIXADO
+}
+
+enum ProprietarioTipo {
+  ADMINISTRADORA
+  ASSOCIACAO_CONDOMINIO
+}
+
+enum MotivoBaixa {
+  FURTO_ROUBO
+  PERDA
+  OBSOLESCENCIA
+  DOACAO
+  VENDA
+  QUEBRA_IRREPARAVEL
+  OUTRO
+}
+
+enum TipoAlocacao {
+  COMODATO
+  USO_INTERNO
+  EMPRESTIMO_TEMPORARIO
+}
+
+enum MotivoDevolucao {
+  SAIDA_FUNCIONARIO
+  TROCA_APARELHO
+  FERIAS_LICENCA
+  OUTROS
+}
+
+enum TipoAnexo {
+  NOTA_FISCAL
+  TERMO_COMODATO
+  CHECKLIST_DEVOLUCAO
+  OUTRO
+}
+
+enum TipoManutencao {
+  PREVENTIVA
+  CORRETIVA
+  TROCA_PECA
+}
+
+enum TipoLicenca {
+  PERPETUA
+  ASSINATURA
+}
+
+enum StatusLinha {
+  ATIVA
+  CANCELADA
+  SEM_USO
+}
+
+enum StatusEmailWorkspace {
+  EM_USO
+  SEM_USO
+}
+
+enum StatusColaborador {
+  ATIVO
+  INATIVO
+}
+
+// Perfis de acesso ao sistema (login), distintos do Colaborador (quem recebe equipamento)
+enum PerfilAcesso {
+  ADMIN
+  CONSULTA
+}
+
+// ─────────────────────────────────────────────
+// CATÁLOGO — MARCA / MODELO
+// ─────────────────────────────────────────────
+
+model Marca {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  modelos   Modelo[]
+  criadoEm  DateTime @default(now())
+
+  @@map("marcas")
+}
+
+model Modelo {
+  id             String            @id @default(cuid())
+  marcaId        String
+  marca          Marca             @relation(fields: [marcaId], references: [id])
+  nome           String
+  tipoEquipamento TipoEquipamento
+  vidaUtilAnos   Int?              @default(5) // usado como sugestão no cálculo de depreciação
+  equipamentos   Equipamento[]
+  criadoEm       DateTime          @default(now())
+
+  @@unique([marcaId, nome])
+  @@map("modelos")
+}
+
+// ─────────────────────────────────────────────
+// CONDOMÍNIO
+// ─────────────────────────────────────────────
+
+model Condominio {
+  id            String            @id @default(cuid())
+  nome          String
+  codigo        String            @unique
+  endereco      String?
+  equipamentos  Equipamento[]
+  colaboradores Colaborador[]
+  emails        EmailWorkspace[]
+  criadoEm      DateTime          @default(now())
+
+  @@map("condominios")
+}
+
+// ─────────────────────────────────────────────
+// COLABORADOR (quem recebe/usa o equipamento)
+// ─────────────────────────────────────────────
+
+model Colaborador {
+  id           String            @id @default(cuid())
+  nome         String
+  rg           String?
+  // CPF: armazenado cifrado (pgcrypto / criptografia de aplicação) — nunca em texto puro.
+  // O campo guarda o valor já cifrado; a máscara/exibição condicional acontece na camada de API.
+  cpfCifrado   Bytes?
+  cargo        String?
+  condominioId String?
+  condominio   Condominio?       @relation(fields: [condominioId], references: [id])
+  status       StatusColaborador @default(ATIVO)
+
+  alocacoes    Alocacao[]
+  linhas       Linha[]
+  emails       EmailWorkspace[]
+  licencas     Licenca[]
+
+  criadoEm     DateTime          @default(now())
+  atualizadoEm DateTime          @updatedAt
+
+  @@index([status])
+  @@map("colaboradores")
+}
+
+// ─────────────────────────────────────────────
+// EQUIPAMENTO
+// ─────────────────────────────────────────────
+
+model Equipamento {
+  id               String            @id @default(cuid())
+  modeloId         String
+  modelo           Modelo            @relation(fields: [modeloId], references: [id])
+  tipoEquipamento  TipoEquipamento
+
+  numeroSerie      String?           @unique // service tag / nº de série do fabricante
+  numeroPatrimonio String            @unique // ex.: ADM-0001 ou COND-{codigo}-0001, gerado no cadastro
+
+  proprietarioTipo ProprietarioTipo
+  condominioId     String
+  condominio       Condominio        @relation(fields: [condominioId], references: [id])
+
+  status           StatusEquipamento @default(EM_ESTOQUE)
+
+  // Nota fiscal — base para depreciação e para reposição em caso de perda/furto
+  notaFiscalNumero String?
+  notaFiscalValor  Decimal?          @db.Decimal(12, 2)
+  notaFiscalData   DateTime?
+  dataAquisicao    DateTime?
+
+  // Rede — apenas registro manual, sem descoberta automática
+  ipLocal          String?
+  macAddress       String?
+  numeroRamal      String?
+
+  itensInclusos    String?           // lista livre (fonte, mochila, capa, película etc.)
+  observacoes      String?
+
+  // Baixa
+  dataBaixa        DateTime?
+  motivoBaixa      MotivoBaixa?
+  observacaoBaixa  String?
+
+  alocacoes        Alocacao[]
+  anexos           Anexo[]
+  manutencoes      Manutencao[]
+  licencas         Licenca[]
+  linha            Linha?
+
+  criadoEm         DateTime          @default(now())
+  atualizadoEm     DateTime          @updatedAt
+
+  @@index([status])
+  @@index([condominioId])
+  @@index([proprietarioTipo])
+  @@map("equipamentos")
+}
+
+// ─────────────────────────────────────────────
+// HISTÓRICO DE ALOCAÇÃO
+// Cada entrega/devolução é um novo registro — nunca sobrescrito.
+// Posse atual = registro do colaborador com dataFim nula.
+// ─────────────────────────────────────────────
+
+model Alocacao {
+  id              String           @id @default(cuid())
+  equipamentoId   String
+  equipamento     Equipamento      @relation(fields: [equipamentoId], references: [id])
+  colaboradorId   String
+  colaborador     Colaborador      @relation(fields: [colaboradorId], references: [id])
+
+  tipo            TipoAlocacao     @default(COMODATO)
+  dataInicio      DateTime         @default(now())
+  dataFim         DateTime?
+  motivoDevolucao MotivoDevolucao?
+
+  anexos          Anexo[]
+
+  criadoEm        DateTime         @default(now())
+
+  @@index([equipamentoId, dataFim])
+  @@index([colaboradorId, dataFim])
+  @@map("alocacoes")
+}
+
+// ─────────────────────────────────────────────
+// ANEXOS (NF, comodato assinado, checklist assinado)
+// ─────────────────────────────────────────────
+
+model Anexo {
+  id              String      @id @default(cuid())
+  equipamentoId   String
+  equipamento     Equipamento @relation(fields: [equipamentoId], references: [id])
+  alocacaoId      String?
+  alocacao        Alocacao?   @relation(fields: [alocacaoId], references: [id])
+
+  tipo            TipoAnexo
+  arquivoUrl      String      // bucket privado, URL assinada gerada sob demanda
+  numeroDocumento String?     // preenchido para Nota Fiscal
+  valor           Decimal?    @db.Decimal(12, 2)
+  data            DateTime?
+
+  criadoEm        DateTime    @default(now())
+
+  @@map("anexos")
+}
+
+// ─────────────────────────────────────────────
+// MANUTENÇÃO
+// ─────────────────────────────────────────────
+
+model Manutencao {
+  id            String         @id @default(cuid())
+  equipamentoId String
+  equipamento   Equipamento    @relation(fields: [equipamentoId], references: [id])
+
+  data          DateTime
+  tipo          TipoManutencao
+  descricao     String
+  pecaTrocada   String?
+  custo         Decimal?       @db.Decimal(12, 2)
+  fornecedor    String?
+
+  criadoEm      DateTime       @default(now())
+
+  @@map("manutencoes")
+}
+
+// ─────────────────────────────────────────────
+// LICENÇA
+// ─────────────────────────────────────────────
+
+model Licenca {
+  id              String       @id @default(cuid())
+  nomeSoftware    String
+  tipo            TipoLicenca
+
+  equipamentoId   String?
+  equipamento     Equipamento? @relation(fields: [equipamentoId], references: [id])
+  colaboradorId   String?
+  colaborador     Colaborador? @relation(fields: [colaboradorId], references: [id])
+
+  chaveLicenca    String?
+  dataInicio      DateTime?
+  dataVencimento  DateTime?
+  valor           Decimal?     @db.Decimal(12, 2)
+
+  criadoEm        DateTime     @default(now())
+
+  @@index([dataVencimento])
+  @@map("licencas")
+}
+
+// ─────────────────────────────────────────────
+// LINHA / CHIP MÓVEL
+// ─────────────────────────────────────────────
+
+model Linha {
+  id              String       @id @default(cuid())
+  numero          String       @unique
+  operadora       String?
+  plano           String?
+  valorMensal     Decimal?     @db.Decimal(10, 2)
+  franquiaDadosGb Decimal?     @db.Decimal(6, 2)
+
+  status          StatusLinha  @default(SEM_USO)
+
+  equipamentoId   String?      @unique
+  equipamento     Equipamento? @relation(fields: [equipamentoId], references: [id])
+  colaboradorId   String?
+  colaborador     Colaborador? @relation(fields: [colaboradorId], references: [id])
+
+  dataAtivacao    DateTime?
+  dataCancelamento DateTime?
+
+  criadoEm        DateTime     @default(now())
+
+  @@index([status])
+  @@map("linhas")
+}
+
+// ─────────────────────────────────────────────
+// EMAIL WORKSPACE
+// Pertence a um Colaborador OU a um Condomínio (nunca aos dois)
+// ─────────────────────────────────────────────
+
+model EmailWorkspace {
+  id           String               @id @default(cuid())
+  email        String               @unique
+  status       StatusEmailWorkspace @default(SEM_USO)
+
+  colaboradorId String?
+  colaborador   Colaborador?        @relation(fields: [colaboradorId], references: [id])
+  condominioId  String?
+  condominio    Condominio?         @relation(fields: [condominioId], references: [id])
+
+  criadoEm     DateTime             @default(now())
+
+  @@map("emails_workspace")
+}
+
+// ─────────────────────────────────────────────
+// USUÁRIOS DO SISTEMA (login) — separado do Colaborador
+// ─────────────────────────────────────────────
+
+model AppUsuario {
+  id        String       @id @default(cuid())
+  nome      String
+  email     String       @unique
+  senhaHash String
+  perfil    PerfilAcesso @default(CONSULTA)
+  ativo     Boolean      @default(true)
+
+  logs      LogAuditoria[]
+
+  criadoEm  DateTime     @default(now())
+
+  @@map("app_usuarios")
+}
+
+// ─────────────────────────────────────────────
+// LOG DE AUDITORIA
+// Obrigatório para acesso/edição de campos sensíveis (ex.: CPF)
+// ─────────────────────────────────────────────
+
+model LogAuditoria {
+  id             String     @id @default(cuid())
+  appUsuarioId   String
+  appUsuario     AppUsuario @relation(fields: [appUsuarioId], references: [id])
+
+  acao           String     // ex.: "VISUALIZOU_CPF", "EDITOU_EQUIPAMENTO", "GEROU_COMODATO"
+  entidade       String     // ex.: "Colaborador", "Equipamento"
+  entidadeId     String
+  campoSensivel  Boolean    @default(false)
+
+  criadoEm       DateTime   @default(now())
+
+  @@index([entidade, entidadeId])
+  @@index([campoSensivel])
+  @@map("logs_auditoria")
+}
