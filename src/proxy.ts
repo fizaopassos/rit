@@ -10,7 +10,7 @@ const PREFIXOS_ADMIN = [
   "/api/usuarios",
 ];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota))) {
