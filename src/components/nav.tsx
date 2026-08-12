@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/condominios", label: "Condomínios" },
   { href: "/modelos", label: "Modelos" },
   { href: "/marcas", label: "Marcas" },
+  { href: "/linhas", label: "Linhas" }
 ];
 
 export function Nav() {

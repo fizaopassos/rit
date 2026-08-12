@@ -9,6 +9,7 @@ const PREFIXOS_ADMIN = [
   "/api/usuarios",
   "/api/alocacoes",
   "/api/anexos",
+  "/api/linhas",
 ];
 
 // Rotas que exigem Admin mas não são só prefixo fixo (têm :id no meio)
