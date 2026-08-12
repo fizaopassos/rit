@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/tabs";
 import { VincularEquipamentoDialog } from "@/components/vincular-equipamento-dialog";
 import { DevolverEquipamentoDialog } from "@/components/devolver-equipamento-dialog";
+import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -26,6 +26,16 @@ const MOTIVO_LABEL: Record<string, string> = {
   TROCA_APARELHO: "Troca de aparelho",
   FERIAS_LICENCA: "Férias ou licença",
   OUTROS: "Outros",
+};
+
+const MOTIVO_BAIXA_LABEL: Record<string, string> = {
+  FURTO_ROUBO: "Furto ou roubo",
+  PERDA: "Perda",
+  OBSOLESCENCIA: "Obsolescência",
+  DOACAO: "Doação",
+  VENDA: "Venda",
+  QUEBRA_IRREPARAVEL: "Quebra irreparável",
+  OUTRO: "Outro",
 };
 
 type Alocacao = {
@@ -49,6 +59,9 @@ type Equipamento = {
   macAddress: string | null;
   numeroRamal: string | null;
   observacoes: string | null;
+  motivoBaixa: string | null;
+  dataBaixa: string | null;
+  observacaoBaixa: string | null;
   modelo: { nome: string; marca: { nome: string } };
   condominio: { nome: string };
   alocacoes: Alocacao[];
@@ -119,22 +132,18 @@ export default function EquipamentoPage() {
         </div>
         <div className="flex items-center gap-2">
           {alocacaoAtual && (
-            <a
-              href={`/api/alocacoes/${alocacaoAtual.id}/comodato`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-primary underline underline-offset-2"
-            >
+            <a href={`/api/alocacoes/${alocacaoAtual.id}/comodato`} target="_blank" rel="noreferrer" className="text-sm text-primary underline underline-offset-2">
               Gerar comodato
             </a>
           )}
           {alocacaoAtual ? (
             <DevolverEquipamentoDialog equipamentoId={equipamento.id} onDevolvido={carregar} />
-          ) : (
-            equipamento.status !== "BAIXADO" && (
+          ) : equipamento.status !== "BAIXADO" ? (
+            <>
               <VincularEquipamentoDialog equipamentoId={equipamento.id} onVinculado={carregar} />
-            )
-          )}
+              <BaixarEquipamentoDialog equipamentoId={equipamento.id} onBaixado={carregar} />
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -151,6 +160,18 @@ export default function EquipamentoPage() {
           <p><span className="text-muted-foreground">MAC:</span> {equipamento.macAddress ?? "—"}</p>
           <p><span className="text-muted-foreground">Ramal:</span> {equipamento.numeroRamal ?? "—"}</p>
           <p><span className="text-muted-foreground">Observações:</span> {equipamento.observacoes ?? "—"}</p>
+          {equipamento.status === "BAIXADO" && (
+            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
+              <p className="font-medium text-destructive">Equipamento baixado</p>
+              <p className="text-muted-foreground text-xs">
+                Motivo: {equipamento.motivoBaixa ? MOTIVO_BAIXA_LABEL[equipamento.motivoBaixa] : "—"}
+                {equipamento.dataBaixa && ` · ${new Date(equipamento.dataBaixa).toLocaleDateString("pt-BR")}`}
+              </p>
+              {equipamento.observacaoBaixa && (
+                <p className="text-muted-foreground text-xs">{equipamento.observacaoBaixa}</p>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="historico" className="pt-4">
@@ -168,12 +189,7 @@ export default function EquipamentoPage() {
                     {a.motivoDevolucao && ` · ${MOTIVO_LABEL[a.motivoDevolucao]}`}
                   </p>
                   {a.dataFim && (
-                    <a
-                      href={`/api/alocacoes/${a.id}/checklist`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary text-xs underline underline-offset-2"
-                    >
+                    <a href={`/api/alocacoes/${a.id}/checklist`} target="_blank" rel="noreferrer" className="text-primary text-xs underline underline-offset-2">
                       Ver checklist de devolução
                     </a>
                   )}
