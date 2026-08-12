@@ -6,9 +6,11 @@ const ROTAS_PUBLICAS = ["/login", "/api/auth/login"];
 const PREFIXOS_ADMIN = [
   "/equipamentos/novo",
   "/api/equipamentos",
-  "/api/colaboradores/cpf",
   "/api/usuarios",
+  "/api/alocacoes",
 ];
+
+const PADROES_ADMIN = [/^\/api\/colaboradores\/.+\/cpf$/];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -24,9 +26,15 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const exigeAdmin = PREFIXOS_ADMIN.some((p) => pathname.startsWith(p));
+  const exigeAdmin =
+    PREFIXOS_ADMIN.some((prefixo) => pathname.startsWith(prefixo)) ||
+    PADROES_ADMIN.some((padrao) => padrao.test(pathname));
+
   if (exigeAdmin && sessao.perfil !== "ADMIN") {
-    return NextResponse.json({ erro: "Acesso restrito ao perfil Admin" }, { status: 403 });
+    return NextResponse.json(
+      { erro: "Acesso restrito ao perfil Admin" },
+      { status: 403 },
+    );
   }
 
   return NextResponse.next();
