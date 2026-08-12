@@ -12,6 +12,7 @@ import {
 import { VincularEquipamentoDialog } from "@/components/vincular-equipamento-dialog";
 import { DevolverEquipamentoDialog } from "@/components/devolver-equipamento-dialog";
 import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
+import { UploadAnexoDialog } from "@/components/upload-anexo-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -38,12 +39,28 @@ const MOTIVO_BAIXA_LABEL: Record<string, string> = {
   OUTRO: "Outro",
 };
 
+const TIPO_ANEXO_LABEL: Record<string, string> = {
+  NOTA_FISCAL: "Nota fiscal",
+  TERMO_COMODATO: "Termo de comodato",
+  CHECKLIST_DEVOLUCAO: "Checklist de devolução",
+  OUTRO: "Outro",
+};
+
 type Alocacao = {
   id: string;
   dataInicio: string;
   dataFim: string | null;
   motivoDevolucao: string | null;
   colaborador: { nome: string };
+};
+
+type Anexo = {
+  id: string;
+  tipo: string;
+  numeroDocumento: string | null;
+  valor: string | null;
+  data: string | null;
+  criadoEm: string;
 };
 
 type Equipamento = {
@@ -65,6 +82,7 @@ type Equipamento = {
   modelo: { nome: string; marca: { nome: string } };
   condominio: { nome: string };
   alocacoes: Alocacao[];
+  anexos: Anexo[];
 };
 
 export default function EquipamentoPage() {
@@ -151,6 +169,7 @@ export default function EquipamentoPage() {
         <TabsList>
           <TabsTrigger value="dados">Dados gerais</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
+          <TabsTrigger value="anexos">Anexos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados" className="space-y-2 pt-4 text-sm">
@@ -193,6 +212,33 @@ export default function EquipamentoPage() {
                       Ver checklist de devolução
                     </a>
                   )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+
+        <TabsContent value="anexos" className="space-y-4 pt-4">
+          <div className="flex justify-end">
+            <UploadAnexoDialog equipamentoId={equipamento.id} onEnviado={carregar} />
+          </div>
+          {equipamento.anexos.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Nenhum anexo ainda.</p>
+          ) : (
+            <ul className="divide-y rounded-md border">
+              {equipamento.anexos.map((anexo) => (
+                <li key={anexo.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                  <div>
+                    <p className="font-medium">{TIPO_ANEXO_LABEL[anexo.tipo] ?? anexo.tipo}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {anexo.numeroDocumento && `NF ${anexo.numeroDocumento} · `}
+                      {anexo.valor && `R$ ${anexo.valor} · `}
+                      {new Date(anexo.criadoEm).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <a href={`/api/anexos/${anexo.id}/download`} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+                    Baixar
+                  </a>
                 </li>
               ))}
             </ul>
