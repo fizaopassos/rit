@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { VincularEquipamentoColaboradorDialog } from "@/components/vincular-equipamento-colaborador-dialog";
 import { DevolverEmLoteDialog } from "@/components/devolver-em-lote-dialog";
+import { EditarColaboradorDialog } from "@/components/editar-colaborador-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 type EquipamentoVinculado = {
@@ -21,8 +22,11 @@ type EquipamentoVinculado = {
 type Colaborador = {
   id: string;
   nome: string;
+  rg: string | null;
   cargo: string | null;
+  status: string;
   cpfMascarado: string | null;
+  condominioId: string | null;
   condominio: { nome: string } | null;
   alocacoes: EquipamentoVinculado[];
 };
@@ -85,19 +89,26 @@ export default function ColaboradorPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">{colaborador.nome}</h1>
-        <p className="text-muted-foreground text-sm">
-          {colaborador.cargo ?? "—"} {colaborador.condominio ? `· ${colaborador.condominio.nome}` : ""}
-        </p>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-muted-foreground font-mono text-sm">
-            {cpfRevelado ?? colaborador.cpfMascarado ?? "—"}
-          </span>
-          {colaborador.cpfMascarado && !cpfRevelado && (
-            <Button variant="ghost" size="sm" onClick={revelarCpf}>Ver CPF</Button>
-          )}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{colaborador.nome}</h1>
+          <p className="text-muted-foreground text-sm">
+            {colaborador.cargo ?? "—"} {colaborador.condominio ? `· ${colaborador.condominio.nome}` : ""}
+            {" · "}
+            <span className={colaborador.status === "INATIVO" ? "text-destructive" : ""}>
+              {colaborador.status === "ATIVO" ? "Ativo" : "Inativo"}
+            </span>
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-muted-foreground font-mono text-sm">
+              {cpfRevelado ?? colaborador.cpfMascarado ?? "—"}
+            </span>
+            {colaborador.cpfMascarado && !cpfRevelado && (
+              <Button variant="ghost" size="sm" onClick={revelarCpf}>Ver CPF</Button>
+            )}
+          </div>
         </div>
+        <EditarColaboradorDialog colaboradorId={colaborador.id} dadosAtuais={colaborador} onEditado={carregar} />
       </div>
 
       <div className="mb-4 flex items-center justify-between">

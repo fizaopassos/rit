@@ -49,3 +49,27 @@ export async function cancelarLinha(linhaId: string) {
     data: { status: "CANCELADA", dataCancelamento: new Date() },
   });
 }
+
+// Responsável e status continuam de fora — mudam só pelos fluxos dedicados
+// (alterar responsável / cancelar), pra manter a data de ativação/cancelamento coerente.
+export async function atualizarLinha(
+  id: string,
+  dados: {
+    numero: string;
+    operadora?: string;
+    plano?: string;
+    valorMensal?: number;
+    franquiaDadosGb?: number;
+  },
+) {
+  return prisma.linha.update({
+    where: { id },
+    data: {
+      numero: dados.numero,
+      operadora: dados.operadora,
+      plano: dados.plano,
+      valorMensal: dados.valorMensal,
+      franquiaDadosGb: dados.franquiaDadosGb,
+    },
+  });
+}

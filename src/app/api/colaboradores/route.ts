@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listarColaboradores, criarColaborador } from "@/services/colaboradores.service";
+import { verificarSessao } from "@/services/auth.service";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get("rit_session")?.value;
+  const sessao = token ? await verificarSessao(token) : null;
   const colaboradores = await listarColaboradores();
+
+  // Consulta só recebe o essencial — nunca cargo, condomínio, CPF etc. —
+  // e só colaboradores ativos (contato de quem já saiu não serve pra recepção).
+  if (sessao?.perfil === "CONSULTA") {
+    const enxuto = colaboradores
+      .filter((c) => c.status === "ATIVO")
+      .map((c) => ({
+        id: c.id,
+        nome: c.nome,
+        telefone: c.telefone,
+        email: c.email,
+      }));
+    return NextResponse.json(enxuto);
+  }
+
   return NextResponse.json(colaboradores);
 }
 

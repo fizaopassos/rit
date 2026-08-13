@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { NovoModeloDialog } from "@/components/novo-modelo-dialog";
+import { EditarModeloDialog } from "@/components/editar-modelo-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 type Modelo = {
@@ -10,6 +11,7 @@ type Modelo = {
   nome: string;
   tipoEquipamento: TipoEquipamentoValue;
   vidaUtilAnos: number | null;
+  marcaId: string;
   marca: { nome: string };
   _count: { equipamentos: number };
 };
@@ -65,9 +67,12 @@ export default function ModelosPage() {
                   {TIPO_EQUIPAMENTO_LABEL[m.tipoEquipamento]} · vida útil {m.vidaUtilAnos ?? "—"} anos
                 </p>
               </div>
-              <span className="text-muted-foreground text-sm">
-                {m._count.equipamentos} equipamento(s)
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-muted-foreground text-sm">
+                  {m._count.equipamentos} equipamento(s)
+                </span>
+                <EditarModeloDialog modeloId={m.id} dadosAtuais={m} onEditado={carregar} />
+              </div>
             </li>
           ))}
         </ul>

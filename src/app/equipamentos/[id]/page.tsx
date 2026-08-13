@@ -13,6 +13,7 @@ import {
 import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
 import { UploadAnexoDialog } from "@/components/upload-anexo-dialog";
 import { NovaManutencaoDialog } from "@/components/nova-manutencao-dialog";
+import { EditarEquipamentoDialog } from "@/components/editar-equipamento-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -81,6 +82,7 @@ type Manutencao = {
 
 type Equipamento = {
   id: string;
+  modeloId: string;
   numeroPatrimonio: string;
   numeroSerie: string | null;
   tipoEquipamento: TipoEquipamentoValue;
@@ -88,9 +90,11 @@ type Equipamento = {
   proprietarioTipo: string;
   notaFiscalNumero: string | null;
   notaFiscalValor: string | null;
+  dataAquisicao: string | null;
   ipLocal: string | null;
   macAddress: string | null;
   numeroRamal: string | null;
+  itensInclusos: string | null;
   observacoes: string | null;
   motivoBaixa: string | null;
   dataBaixa: string | null;
@@ -153,9 +157,12 @@ export default function EquipamentoPage() {
             {equipamento.proprietarioTipo === "ADMINISTRADORA" ? "Administradora" : "Associação"}
           </p>
         </div>
-        <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
-          {STATUS_LABEL[equipamento.status]}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+            {STATUS_LABEL[equipamento.status]}
+          </span>
+          <EditarEquipamentoDialog equipamentoId={equipamento.id} dadosAtuais={equipamento} onEditado={carregar} />
+        </div>
       </div>
 
       <div className="mb-6 flex items-center justify-between rounded-md border p-4">
@@ -192,9 +199,11 @@ export default function EquipamentoPage() {
         <TabsContent value="dados" className="space-y-2 pt-4 text-sm">
           <p><span className="text-muted-foreground">Nº de série:</span> {equipamento.numeroSerie ?? "—"}</p>
           <p><span className="text-muted-foreground">Nota fiscal:</span> {equipamento.notaFiscalNumero ?? "—"} {equipamento.notaFiscalValor ? `· R$ ${equipamento.notaFiscalValor}` : ""}</p>
+          <p><span className="text-muted-foreground">Data de aquisição:</span> {equipamento.dataAquisicao ? new Date(equipamento.dataAquisicao).toLocaleDateString("pt-BR") : "—"}</p>
           <p><span className="text-muted-foreground">IP local:</span> {equipamento.ipLocal ?? "—"}</p>
           <p><span className="text-muted-foreground">MAC:</span> {equipamento.macAddress ?? "—"}</p>
           <p><span className="text-muted-foreground">Ramal:</span> {equipamento.numeroRamal ?? "—"}</p>
+          <p><span className="text-muted-foreground">Itens inclusos:</span> {equipamento.itensInclusos ?? "—"}</p>
           <p><span className="text-muted-foreground">Observações:</span> {equipamento.observacoes ?? "—"}</p>
           {equipamento.status === "BAIXADO" && (
             <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">

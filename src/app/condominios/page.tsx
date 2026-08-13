@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { NovoCondominioDialog } from "@/components/novo-condominio-dialog";
+import { EditarCondominioDialog } from "@/components/editar-condominio-dialog";
 
 type Condominio = {
   id: string;
@@ -59,7 +60,10 @@ export default function CondominiosPage() {
                   <p className="text-muted-foreground text-xs">{c.endereco}</p>
                 )}
               </div>
-              <span className="text-muted-foreground text-sm">{c.codigo}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-muted-foreground text-sm">{c.codigo}</span>
+                <EditarCondominioDialog condominioId={c.id} dadosAtuais={c} onEditado={carregar} />
+              </div>
             </li>
           ))}
         </ul>

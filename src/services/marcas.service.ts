@@ -11,6 +11,10 @@ export async function criarMarca(nome: string) {
   return prisma.marca.create({ data: { nome } });
 }
 
+export async function atualizarMarca(id: string, nome: string) {
+  return prisma.marca.update({ where: { id }, data: { nome } });
+}
+
 export async function excluirMarca(id: string) {
   return prisma.marca.delete({ where: { id } });
 }

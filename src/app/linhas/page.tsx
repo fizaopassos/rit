@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { NovaLinhaDialog } from "@/components/nova-linha-dialog";
 import { AlterarResponsavelLinhaDialog } from "@/components/alterar-responsavel-linha-dialog";
+import { EditarLinhaDialog } from "@/components/editar-linha-dialog";
 
 type Linha = {
   id: string;
@@ -115,6 +116,7 @@ export default function LinhasPage() {
                   </span>
                   {l.status !== "CANCELADA" && (
                     <>
+                      <EditarLinhaDialog linhaId={l.id} dadosAtuais={l} onEditado={carregar} />
                       <AlterarResponsavelLinhaDialog
                         linhaId={l.id}
                         colaboradorAtualId={l.colaborador?.id ?? null}

@@ -75,3 +75,41 @@ export async function criarEquipamento(dados: {
     include: { modelo: { include: { marca: true } }, condominio: true },
   });
 }
+
+// Proprietário, condomínio e número de patrimônio ficam de fora — já
+// podem estar impressos numa etiqueta física, então não são editáveis.
+export async function atualizarEquipamento(
+  id: string,
+  dados: {
+    modeloId: string;
+    tipoEquipamento: TipoEquipamento;
+    numeroSerie?: string;
+    notaFiscalNumero?: string;
+    notaFiscalValor?: number;
+    notaFiscalData?: string;
+    dataAquisicao?: string;
+    ipLocal?: string;
+    macAddress?: string;
+    numeroRamal?: string;
+    itensInclusos?: string;
+    observacoes?: string;
+  },
+) {
+  return prisma.equipamento.update({
+    where: { id },
+    data: {
+      modeloId: dados.modeloId,
+      tipoEquipamento: dados.tipoEquipamento,
+      numeroSerie: dados.numeroSerie,
+      notaFiscalNumero: dados.notaFiscalNumero,
+      notaFiscalValor: dados.notaFiscalValor,
+      notaFiscalData: dados.notaFiscalData ? new Date(dados.notaFiscalData) : undefined,
+      dataAquisicao: dados.dataAquisicao ? new Date(dados.dataAquisicao) : undefined,
+      ipLocal: dados.ipLocal,
+      macAddress: dados.macAddress,
+      numeroRamal: dados.numeroRamal,
+      itensInclusos: dados.itensInclusos,
+      observacoes: dados.observacoes,
+    },
+  });
+}

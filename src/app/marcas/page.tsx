@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { NovaMarcaDialog } from "@/components/nova-marca-dialog";
+import { EditarMarcaDialog } from "@/components/editar-marca-dialog";
 
 type Marca = {
   id: string;
@@ -57,9 +58,12 @@ export default function MarcasPage() {
               className="flex items-center justify-between px-4 py-3"
             >
               <span className="font-medium">{marca.nome}</span>
-              <span className="text-muted-foreground text-sm">
-                {marca._count.modelos} modelo(s)
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-muted-foreground text-sm">
+                  {marca._count.modelos} modelo(s)
+                </span>
+                <EditarMarcaDialog marcaId={marca.id} nomeAtual={marca.nome} onEditado={carregar} />
+              </div>
             </li>
           ))}
         </ul>

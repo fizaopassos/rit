@@ -4,7 +4,11 @@ import { cifrarCpf, decifrarCpf, mascararCpf } from "@/lib/cpf";
 export async function listarColaboradores() {
   const colaboradores = await prisma.colaborador.findMany({
     orderBy: { nome: "asc" },
-    include: { condominio: { select: { nome: true } } },
+    include: {
+      condominio: { select: { nome: true } },
+      linhas: { where: { status: "ATIVA" }, take: 1, select: { numero: true } },
+      emails: { where: { status: "EM_USO" }, take: 1, select: { email: true } },
+    },
   });
 
   // CPF nunca sai completo daqui — só mascarado.
@@ -12,6 +16,8 @@ export async function listarColaboradores() {
     ...c,
     cpfMascarado: c.cpfCifrado ? mascararCpf(decifrarCpf(c.cpfCifrado)) : null,
     cpfCifrado: undefined, // remove o campo bruto da resposta
+    telefone: c.linhas[0]?.numero ?? null,
+    email: c.emails[0]?.email ?? null,
   }));
 }
 
@@ -42,6 +48,30 @@ export async function revelarCpf(colaboradorId: string) {
 
   if (!colaborador?.cpfCifrado) return null;
   return decifrarCpf(colaborador.cpfCifrado);
+}
+
+export async function atualizarColaborador(
+  id: string,
+  dados: {
+    nome: string;
+    rg?: string;
+    cargo?: string;
+    condominioId?: string;
+    status: "ATIVO" | "INATIVO";
+    cpf?: string; // opcional — só re-cifra se um valor novo for enviado
+  },
+) {
+  return prisma.colaborador.update({
+    where: { id },
+    data: {
+      nome: dados.nome,
+      rg: dados.rg,
+      cargo: dados.cargo,
+      condominioId: dados.condominioId || null,
+      status: dados.status,
+      ...(dados.cpf ? { cpfCifrado: cifrarCpf(dados.cpf) } : {}),
+    },
+  });
 }
 
 // Ficha do colaborador — traz só os equipamentos atualmente vinculados

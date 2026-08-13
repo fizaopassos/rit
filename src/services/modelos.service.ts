@@ -23,3 +23,23 @@ export async function criarModelo(dados: {
     },
   });
 }
+
+export async function atualizarModelo(
+  id: string,
+  dados: {
+    marcaId: string;
+    nome: string;
+    tipoEquipamento: TipoEquipamento;
+    vidaUtilAnos?: number;
+  },
+) {
+  return prisma.modelo.update({
+    where: { id },
+    data: {
+      marcaId: dados.marcaId,
+      nome: dados.nome,
+      tipoEquipamento: dados.tipoEquipamento,
+      vidaUtilAnos: dados.vidaUtilAnos ?? 5,
+    },
+  });
+}

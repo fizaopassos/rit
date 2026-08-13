@@ -11,3 +11,10 @@ export async function criarCondominio(dados: {
 }) {
   return prisma.condominio.create({ data: dados });
 }
+
+export async function atualizarCondominio(
+  id: string,
+  dados: { nome: string; codigo: string; endereco?: string },
+) {
+  return prisma.condominio.update({ where: { id }, data: dados });
+}
