@@ -43,3 +43,31 @@ export async function revelarCpf(colaboradorId: string) {
   if (!colaborador?.cpfCifrado) return null;
   return decifrarCpf(colaborador.cpfCifrado);
 }
+
+// Ficha do colaborador — traz só os equipamentos atualmente vinculados
+// (alocações sem dataFim). Histórico completo continua sendo consulta
+// da ficha do próprio equipamento.
+export async function buscarColaborador(id: string) {
+  const colaborador = await prisma.colaborador.findUnique({
+    where: { id },
+    include: {
+      condominio: true,
+      alocacoes: {
+        where: { dataFim: null },
+        include: {
+          equipamento: {
+            include: { modelo: { include: { marca: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  if (!colaborador) return null;
+
+  return {
+    ...colaborador,
+    cpfMascarado: colaborador.cpfCifrado ? mascararCpf(decifrarCpf(colaborador.cpfCifrado)) : null,
+    cpfCifrado: undefined,
+  };
+}

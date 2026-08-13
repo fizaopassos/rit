@@ -261,10 +261,12 @@ model Anexo {
   equipamento     Equipamento @relation(fields: [equipamentoId], references: [id])
   alocacaoId      String?
   alocacao        Alocacao?   @relation(fields: [alocacaoId], references: [id])
+  manutencaoId    String?
+  manutencao      Manutencao? @relation(fields: [manutencaoId], references: [id])
 
   tipo            TipoAnexo
-  arquivoUrl      String      // bucket privado, URL assinada gerada sob demanda
-  numeroDocumento String?     // preenchido para Nota Fiscal
+  arquivoUrl      String
+  numeroDocumento String?
   valor           Decimal?    @db.Decimal(12, 2)
   data            DateTime?
 
@@ -288,6 +290,8 @@ model Manutencao {
   pecaTrocada   String?
   custo         Decimal?       @db.Decimal(12, 2)
   fornecedor    String?
+
+  anexos        Anexo[]
 
   criadoEm      DateTime       @default(now())
 

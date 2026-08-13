@@ -5,6 +5,7 @@ import { TipoAnexo } from "@prisma/client";
 export async function criarAnexo(dados: {
   equipamentoId: string;
   alocacaoId?: string;
+  manutencaoId?: string;
   tipo: TipoAnexo;
   arquivoBuffer: Buffer;
   nomeArquivo: string;
@@ -21,6 +22,7 @@ export async function criarAnexo(dados: {
     data: {
       equipamentoId: dados.equipamentoId,
       alocacaoId: dados.alocacaoId,
+      manutencaoId: dados.manutencaoId,
       tipo: dados.tipo,
       arquivoUrl: caminho, // guardamos o caminho, não uma URL — a URL assinada é gerada sob demanda
       numeroDocumento: dados.numeroDocumento,

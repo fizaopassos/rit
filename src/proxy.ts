@@ -13,7 +13,10 @@ const PREFIXOS_ADMIN = [
 ];
 
 // Rotas que exigem Admin mas não são só prefixo fixo (têm :id no meio)
-const PADROES_ADMIN = [/^\/api\/colaboradores\/.+\/cpf$/];
+const PADROES_ADMIN = [
+  /^\/api\/colaboradores\/.+\/cpf$/,
+  /^\/api\/colaboradores\/.+\/devolver$/,
+];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

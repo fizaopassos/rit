@@ -68,3 +68,37 @@ export async function devolverEquipamento(
     }),
   ]);
 }
+
+// Devolução em lote — fecha várias alocações do mesmo colaborador de uma
+// vez (mesmo motivo pra todas) e devolve os IDs fechados, usados depois
+// para gerar um único PDF de checklist com todos os itens.
+export async function devolverEquipamentosEmLote(
+  colaboradorId: string,
+  equipamentoIds: string[],
+  motivoDevolucao: MotivoDevolucao,
+) {
+  const alocacoesAbertas = await prisma.alocacao.findMany({
+    where: { colaboradorId, equipamentoId: { in: equipamentoIds }, dataFim: null },
+  });
+
+  if (alocacoesAbertas.length === 0) {
+    throw new Error("Nenhuma alocação em aberto encontrada para os equipamentos selecionados");
+  }
+
+  const agora = new Date();
+  const alocacaoIds = alocacoesAbertas.map((a) => a.id);
+  const equipIds = alocacoesAbertas.map((a) => a.equipamentoId);
+
+  await prisma.$transaction([
+    prisma.alocacao.updateMany({
+      where: { id: { in: alocacaoIds } },
+      data: { dataFim: agora, motivoDevolucao },
+    }),
+    prisma.equipamento.updateMany({
+      where: { id: { in: equipIds } },
+      data: { status: "EM_ESTOQUE" },
+    }),
+  ]);
+
+  return alocacaoIds;
+}

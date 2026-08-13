@@ -147,3 +147,59 @@ export function buildChecklistHtml(alocacao: AlocacaoComDados) {
     </body></html>
   `;
 }
+
+// Versão em lote — vários equipamentos devolvidos juntos no mesmo documento,
+// exatamente como o checklist em papel costuma ser preenchido na prática.
+export function buildChecklistHtmlLote(alocacoes: AlocacaoComDados[]) {
+  const primeira = alocacoes[0];
+  const linhasItens = alocacoes
+    .map((a) => {
+      const eq = a.equipamento;
+      const itens = (eq.itensInclusos ?? "")
+        .split(",")
+        .map((i) => i.trim())
+        .filter(Boolean);
+      return `
+        <tr>
+          <td>${eq.tipoEquipamento}</td>
+          <td>${eq.modelo.marca.nome} ${eq.modelo.nome}</td>
+          <td>${eq.numeroSerie ?? "—"}</td>
+          <td>${itens.length ? itens.join(", ") : "—"}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+    <html><head>${ESTILO_BASE}</head><body>
+      <div class="cabecalho"><strong>RETHA</strong></div>
+      <h1>Devolução de Equipamentos Corporativos</h1>
+
+      <p><strong>1. Informações do Colaborador/Prestador</strong></p>
+      <table>
+        <tr><td><strong>Nome completo</strong></td><td>${primeira.colaborador.nome}</td></tr>
+        <tr><td><strong>Localidade</strong></td><td>${primeira.equipamento.condominio.nome}</td></tr>
+        <tr><td><strong>Setor</strong></td><td>${primeira.colaborador.cargo ?? "—"}</td></tr>
+      </table>
+
+      <p><strong>2. Descrição do(s) bem(ns) devolvido(s)</strong></p>
+      <table>
+        <tr><th>Item</th><th>Marca e modelo</th><th>S/N</th><th>Itens inclusos</th></tr>
+        ${linhasItens}
+      </table>
+
+      <p><strong>3. Motivo da devolução</strong></p>
+      <p>${primeira.motivoDevolucao ? MOTIVO_LABEL[primeira.motivoDevolucao] : "—"}</p>
+
+      <p><strong>4. Declaração</strong></p>
+      <p>A Retha declara ter recebido os itens descritos no item 2 deste termo do profissional acima citado, ciente do motivo da devolução descrito no item 3.</p>
+
+      <p style="margin-top:24px">Cotia, ${formatarData(primeira.dataFim ?? new Date())}.</p>
+
+      <div class="assinaturas">
+        <div class="assinatura">Assinatura do Responsável de TI</div>
+        <div class="assinatura">Assinatura do Colaborador</div>
+      </div>
+    </body></html>
+  `;
+}

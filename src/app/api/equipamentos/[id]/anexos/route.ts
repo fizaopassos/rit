@@ -15,6 +15,7 @@ export async function POST(
   const numeroDocumento = formData.get("numeroDocumento") as string | null;
   const valor = formData.get("valor") as string | null;
   const data = formData.get("data") as string | null;
+  const manutencaoId = formData.get("manutencaoId") as string | null;
 
   if (!arquivo || !tipo || !TIPOS.includes(tipo as (typeof TIPOS)[number])) {
     return NextResponse.json({ erro: "Arquivo e tipo são obrigatórios" }, { status: 400 });
@@ -25,6 +26,7 @@ export async function POST(
   try {
     const anexo = await criarAnexo({
       equipamentoId: id,
+      manutencaoId: manutencaoId || undefined,
       tipo: tipo as (typeof TIPOS)[number],
       arquivoBuffer: buffer,
       nomeArquivo: arquivo.name,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   Tabs,
@@ -9,10 +10,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { VincularEquipamentoDialog } from "@/components/vincular-equipamento-dialog";
-import { DevolverEquipamentoDialog } from "@/components/devolver-equipamento-dialog";
 import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
 import { UploadAnexoDialog } from "@/components/upload-anexo-dialog";
+import { NovaManutencaoDialog } from "@/components/nova-manutencao-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -46,12 +46,18 @@ const TIPO_ANEXO_LABEL: Record<string, string> = {
   OUTRO: "Outro",
 };
 
+const TIPO_MANUTENCAO_LABEL: Record<string, string> = {
+  PREVENTIVA: "Preventiva",
+  CORRETIVA: "Corretiva",
+  TROCA_PECA: "Troca de peça",
+};
+
 type Alocacao = {
   id: string;
   dataInicio: string;
   dataFim: string | null;
   motivoDevolucao: string | null;
-  colaborador: { nome: string };
+  colaborador: { id: string; nome: string };
 };
 
 type Anexo = {
@@ -61,6 +67,16 @@ type Anexo = {
   valor: string | null;
   data: string | null;
   criadoEm: string;
+};
+
+type Manutencao = {
+  id: string;
+  data: string;
+  tipo: string;
+  descricao: string;
+  pecaTrocada: string | null;
+  custo: string | null;
+  fornecedor: string | null;
 };
 
 type Equipamento = {
@@ -83,6 +99,7 @@ type Equipamento = {
   condominio: { nome: string };
   alocacoes: Alocacao[];
   anexos: Anexo[];
+  manutencoes: Manutencao[];
 };
 
 export default function EquipamentoPage() {
@@ -145,30 +162,30 @@ export default function EquipamentoPage() {
         <div>
           <p className="text-muted-foreground text-xs">Responsável atual</p>
           <p className="font-medium">
-            {alocacaoAtual ? alocacaoAtual.colaborador.nome : "Ninguém — em estoque"}
+            {alocacaoAtual ? (
+              <Link href={`/colaboradores/${alocacaoAtual.colaborador.id}`} className="text-primary underline underline-offset-2">
+                {alocacaoAtual.colaborador.nome}
+              </Link>
+            ) : (
+              "Ninguém — em estoque"
+            )}
           </p>
-        </div>
-        <div className="flex items-center gap-2">
           {alocacaoAtual && (
-            <a href={`/api/alocacoes/${alocacaoAtual.id}/comodato`} target="_blank" rel="noreferrer" className="text-sm text-primary underline underline-offset-2">
-              Gerar comodato
-            </a>
+            <p className="text-muted-foreground text-xs">
+              Vincular, devolver e gerar comodato acontecem na ficha do colaborador.
+            </p>
           )}
-          {alocacaoAtual ? (
-            <DevolverEquipamentoDialog equipamentoId={equipamento.id} onDevolvido={carregar} />
-          ) : equipamento.status !== "BAIXADO" ? (
-            <>
-              <VincularEquipamentoDialog equipamentoId={equipamento.id} onVinculado={carregar} />
-              <BaixarEquipamentoDialog equipamentoId={equipamento.id} onBaixado={carregar} />
-            </>
-          ) : null}
         </div>
+        {!alocacaoAtual && equipamento.status !== "BAIXADO" && (
+          <BaixarEquipamentoDialog equipamentoId={equipamento.id} onBaixado={carregar} />
+        )}
       </div>
 
       <Tabs defaultValue="dados">
         <TabsList>
           <TabsTrigger value="dados">Dados gerais</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
+          <TabsTrigger value="manutencoes">Manutenções</TabsTrigger>
           <TabsTrigger value="anexos">Anexos</TabsTrigger>
         </TabsList>
 
@@ -200,18 +217,46 @@ export default function EquipamentoPage() {
             <ul className="space-y-3">
               {equipamento.alocacoes.map((a) => (
                 <li key={a.id} className="border-l-2 pl-3 text-sm">
-                  <p className="font-medium">{a.colaborador.nome}</p>
+                  <Link href={`/colaboradores/${a.colaborador.id}`} className="font-medium text-primary underline underline-offset-2">
+                    {a.colaborador.nome}
+                  </Link>
                   <p className="text-muted-foreground text-xs">
                     {new Date(a.dataInicio).toLocaleDateString("pt-BR")}
                     {" → "}
                     {a.dataFim ? new Date(a.dataFim).toLocaleDateString("pt-BR") : "atual"}
                     {a.motivoDevolucao && ` · ${MOTIVO_LABEL[a.motivoDevolucao]}`}
                   </p>
-                  {a.dataFim && (
-                    <a href={`/api/alocacoes/${a.id}/checklist`} target="_blank" rel="noreferrer" className="text-primary text-xs underline underline-offset-2">
-                      Ver checklist de devolução
-                    </a>
-                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+
+        <TabsContent value="manutencoes" className="space-y-4 pt-4">
+          <div className="flex justify-end">
+            <NovaManutencaoDialog equipamentoId={equipamento.id} onCriada={carregar} />
+          </div>
+          {equipamento.manutencoes.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Nenhuma manutenção registrada ainda.</p>
+          ) : (
+            <ul className="space-y-3">
+              {equipamento.manutencoes.map((m) => (
+                <li key={m.id} className="rounded-md border p-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">{TIPO_MANUTENCAO_LABEL[m.tipo] ?? m.tipo}</p>
+                    <span className="text-muted-foreground text-xs">
+                      {new Date(m.data).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">{m.descricao}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {m.pecaTrocada && `Peça: ${m.pecaTrocada} · `}
+                    {m.custo ? `R$ ${m.custo}` : "Sem custo"}
+                    {m.fornecedor && ` · ${m.fornecedor}`}
+                  </p>
+                  <div className="mt-2">
+                    <UploadAnexoDialog equipamentoId={equipamento.id} manutencaoId={m.id} onEnviado={carregar} />
+                  </div>
                 </li>
               ))}
             </ul>

@@ -28,11 +28,13 @@ const MOTIVO_LABEL: Record<string, string> = {
   OUTROS: "Outros",
 };
 
-export function DevolverEquipamentoDialog({
-  equipamentoId,
+export function DevolverEmLoteDialog({
+  colaboradorId,
+  equipamentoIds,
   onDevolvido,
 }: {
-  equipamentoId: string;
+  colaboradorId: string;
+  equipamentoIds: string[];
   onDevolvido: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -48,10 +50,10 @@ export function DevolverEquipamentoDialog({
 
     setEnviando(true);
     try {
-      const res = await fetch(`/api/equipamentos/${equipamentoId}/devolver`, {
+      const res = await fetch(`/api/colaboradores/${colaboradorId}/devolver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ motivoDevolucao: motivo }),
+        body: JSON.stringify({ equipamentoIds, motivoDevolucao: motivo }),
       });
       const data = await res.json();
 
@@ -60,7 +62,11 @@ export function DevolverEquipamentoDialog({
         return;
       }
 
-      toast.success("Devolução registrada");
+      toast.success(`${data.alocacaoIds.length} equipamento(s) devolvido(s)`);
+      // Abre o checklist já com todos os itens devolvidos juntos
+      window.open(`/api/alocacoes/checklist-lote?ids=${data.alocacaoIds.join(",")}`, "_blank");
+
+      setMotivo(undefined);
       setOpen(false);
       onDevolvido();
     } catch {
@@ -72,13 +78,20 @@ export function DevolverEquipamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline">Devolver</Button>} />
+      <DialogTrigger
+        render={
+          <Button variant="outline" disabled={equipamentoIds.length === 0}>
+            Devolver selecionados ({equipamentoIds.length})
+          </Button>
+        }
+      />
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Registrar devolução</DialogTitle>
           <DialogDescription>
-            Mesma lista de motivos do checklist de devolução em papel.
+            {equipamentoIds.length} equipamento(s) selecionado(s) — todos vão
+            para o mesmo checklist de devolução, com o mesmo motivo.
           </DialogDescription>
         </DialogHeader>
 

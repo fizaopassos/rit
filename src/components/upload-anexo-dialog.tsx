@@ -31,13 +31,15 @@ const TIPO_LABEL: Record<string, string> = {
 
 export function UploadAnexoDialog({
   equipamentoId,
+  manutencaoId,
   onEnviado,
 }: {
   equipamentoId: string;
+  manutencaoId?: string;
   onEnviado: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [tipo, setTipo] = useState<string>();
+  const [tipo, setTipo] = useState<string | undefined>(manutencaoId ? "OUTRO" : undefined);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [numeroDocumento, setNumeroDocumento] = useState("");
   const [valor, setValor] = useState("");
@@ -60,6 +62,7 @@ export function UploadAnexoDialog({
       if (numeroDocumento) formData.append("numeroDocumento", numeroDocumento);
       if (valor) formData.append("valor", valor);
       if (data) formData.append("data", data);
+      if (manutencaoId) formData.append("manutencaoId", manutencaoId);
 
       const res = await fetch(`/api/equipamentos/${equipamentoId}/anexos`, {
         method: "POST",
@@ -89,7 +92,7 @@ export function UploadAnexoDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline">Enviar anexo</Button>} />
+      <DialogTrigger render={<Button variant="outline" size={manutencaoId ? "sm" : "default"}>{manutencaoId ? "Anexar comprovante" : "Enviar anexo"}</Button>} />
 
       <DialogContent>
         <DialogHeader>

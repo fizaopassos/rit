@@ -21,33 +21,38 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-type Colaborador = { id: string; nome: string };
+type Equipamento = {
+  id: string;
+  numeroPatrimonio: string;
+  status: string;
+  modelo: { nome: string; marca: { nome: string } };
+};
 
-export function VincularEquipamentoDialog({
-  equipamentoId,
+export function VincularEquipamentoColaboradorDialog({
+  colaboradorId,
   onVinculado,
 }: {
-  equipamentoId: string;
+  colaboradorId: string;
   onVinculado: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [colaboradorId, setColaboradorId] = useState<string>();
+  const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
+  const [equipamentoId, setEquipamentoId] = useState<string>();
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     if (open) {
-      fetch("/api/colaboradores")
+      fetch("/api/equipamentos")
         .then((r) => r.json())
-        .then(setColaboradores)
-        .catch(() => toast.error("Não foi possível carregar os colaboradores"));
+        .then((lista: Equipamento[]) => setEquipamentos(lista.filter((e) => e.status === "EM_ESTOQUE")))
+        .catch(() => toast.error("Não foi possível carregar os equipamentos"));
     }
   }, [open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!colaboradorId) {
-      toast.error("Selecione um colaborador");
+    if (!equipamentoId) {
+      toast.error("Selecione um equipamento");
       return;
     }
 
@@ -66,6 +71,7 @@ export function VincularEquipamentoDialog({
       }
 
       toast.success("Equipamento vinculado");
+      setEquipamentoId(undefined);
       setOpen(false);
       onVinculado();
     } catch {
@@ -77,27 +83,28 @@ export function VincularEquipamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Vincular a usuário</Button>} />
+      <DialogTrigger render={<Button>Vincular equipamento</Button>} />
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Vincular a colaborador</DialogTitle>
+          <DialogTitle>Vincular equipamento</DialogTitle>
           <DialogDescription>
-            Isso registra o início do comodato e muda o status do equipamento
-            para "Em uso". A geração do PDF do comodato vem na próxima etapa.
+            Só aparecem equipamentos que estão em estoque.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Colaborador</Label>
-            <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
+            <Label>Equipamento</Label>
+            <Select value={equipamentoId} onValueChange={(v) => setEquipamentoId(v ?? undefined)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                {colaboradores.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                {equipamentos.map((eq) => (
+                  <SelectItem key={eq.id} value={eq.id}>
+                    {eq.numeroPatrimonio} — {eq.modelo.marca.nome} {eq.modelo.nome}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
