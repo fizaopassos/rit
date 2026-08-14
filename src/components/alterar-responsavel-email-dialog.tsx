@@ -22,45 +22,32 @@ import {
 import { Label } from "@/components/ui/label";
 
 type Colaborador = { id: string; nome: string };
-type Condominio = { id: string; nome: string };
 
 export function AlterarResponsavelEmailDialog({
   emailId,
-  dadosAtuais,
+  colaboradorAtualId,
   onAlterado,
 }: {
   emailId: string;
-  dadosAtuais: { colaboradorId: string | null; condominioId: string | null };
+  colaboradorAtualId: string | null;
   onAlterado: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [condominios, setCondominios] = useState<Condominio[]>([]);
-  const [tipoVinculo, setTipoVinculo] = useState<"colaborador" | "condominio" | "nenhum">();
-  const [colaboradorId, setColaboradorId] = useState<string>();
-  const [condominioId, setCondominioId] = useState<string>();
+  const [colaboradorId, setColaboradorId] = useState<string | undefined>();
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     if (open) {
-      Promise.all([
-        fetch("/api/colaboradores").then((r) => r.json()),
-        fetch("/api/condominios").then((r) => r.json()),
-      ]).then(([listaColaboradores, listaCondominios]) => {
-        setColaboradores(listaColaboradores);
-        setCondominios(listaCondominios);
-        if (dadosAtuais.colaboradorId) {
-          setTipoVinculo("colaborador");
-          setColaboradorId(dadosAtuais.colaboradorId);
-        } else if (dadosAtuais.condominioId) {
-          setTipoVinculo("condominio");
-          setCondominioId(dadosAtuais.condominioId);
-        } else {
-          setTipoVinculo("nenhum");
-        }
-      }).catch(() => toast.error("Não foi possível carregar os dados"));
+      fetch("/api/colaboradores")
+        .then((r) => r.json())
+        .then((lista: Colaborador[]) => {
+          setColaboradores(lista);
+          setColaboradorId(colaboradorAtualId ?? undefined);
+        })
+        .catch(() => toast.error("Não foi possível carregar os colaboradores"));
     }
-  }, [open, dadosAtuais.colaboradorId, dadosAtuais.condominioId]);
+  }, [open, colaboradorAtualId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,10 +56,7 @@ export function AlterarResponsavelEmailDialog({
       const res = await fetch(`/api/emails/${emailId}/responsavel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          colaboradorId: tipoVinculo === "colaborador" ? colaboradorId : undefined,
-          condominioId: tipoVinculo === "condominio" ? condominioId : undefined,
-        }),
+        body: JSON.stringify({ colaboradorId: colaboradorId ?? null }),
       });
 
       if (!res.ok) {
@@ -97,55 +81,26 @@ export function AlterarResponsavelEmailDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Alterar responsável do email</DialogTitle>
-          <DialogDescription>Escolha "Nenhum" para marcar como Sem uso.</DialogDescription>
+          <DialogDescription>
+            Deixar em branco marca como Sem uso. O vínculo com o condomínio
+            (se houver) não muda aqui.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Pertence a</Label>
-            <Select value={tipoVinculo} onValueChange={(v) => v && setTipoVinculo(v as typeof tipoVinculo)}>
+            <Label>Colaborador</Label>
+            <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione..." />
+                <SelectValue placeholder="Sem vínculo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="colaborador">Um colaborador</SelectItem>
-                <SelectItem value="condominio">Um condomínio (genérico)</SelectItem>
-                <SelectItem value="nenhum">Ninguém (sem uso)</SelectItem>
+                {colaboradores.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-
-          {tipoVinculo === "colaborador" && (
-            <div className="space-y-2">
-              <Label>Colaborador</Label>
-              <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {colaboradores.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {tipoVinculo === "condominio" && (
-            <div className="space-y-2">
-              <Label>Condomínio</Label>
-              <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {condominios.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <DialogFooter>
             <Button type="submit" disabled={enviando}>

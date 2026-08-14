@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { alterarResponsavelEmail } from "@/services/emails.service";
 
-const schema = z.object({
-  colaboradorId: z.string().optional(),
-  condominioId: z.string().optional(),
-});
+const schema = z.object({ colaboradorId: z.string().nullable() });
 
 export async function POST(
   req: NextRequest,
@@ -19,6 +16,6 @@ export async function POST(
     return NextResponse.json({ erro: "Dados inválidos" }, { status: 400 });
   }
 
-  await alterarResponsavelEmail(id, parsed.data);
+  await alterarResponsavelEmail(id, parsed.data.colaboradorId);
   return NextResponse.json({ ok: true });
 }

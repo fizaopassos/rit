@@ -30,7 +30,7 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [condominios, setCondominios] = useState<Condominio[]>([]);
   const [emailAddr, setEmailAddr] = useState("");
-  const [tipoVinculo, setTipoVinculo] = useState<"colaborador" | "condominio" | "nenhum">("colaborador");
+  const [tipo, setTipo] = useState<"pessoal" | "generico">("pessoal");
   const [colaboradorId, setColaboradorId] = useState<string>();
   const [condominioId, setCondominioId] = useState<string>();
   const [enviando, setEnviando] = useState(false);
@@ -51,8 +51,8 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: emailAddr,
-          colaboradorId: tipoVinculo === "colaborador" ? colaboradorId : undefined,
-          condominioId: tipoVinculo === "condominio" ? condominioId : undefined,
+          condominioId: tipo === "generico" ? condominioId : undefined,
+          colaboradorId,
         }),
       });
       const data = await res.json();
@@ -83,9 +83,8 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
         <DialogHeader>
           <DialogTitle>Novo email Workspace</DialogTitle>
           <DialogDescription>
-            Em condomínio, o email costuma ser genérico (do cargo/local), não
-            de uma pessoa — por isso o vínculo pode ser com Colaborador ou
-            com Condomínio.
+            Genérico de condomínio: o endereço pertence ao condomínio, e você
+            também pode dizer quem responde por ele hoje.
           </DialogDescription>
         </DialogHeader>
 
@@ -96,36 +95,19 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
           </div>
 
           <div className="space-y-2">
-            <Label>Pertence a</Label>
-            <Select value={tipoVinculo} onValueChange={(v) => v && setTipoVinculo(v as typeof tipoVinculo)}>
+            <Label>Tipo</Label>
+            <Select value={tipo} onValueChange={(v) => v && setTipo(v as typeof tipo)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="colaborador">Um colaborador</SelectItem>
-                <SelectItem value="condominio">Um condomínio (genérico)</SelectItem>
-                <SelectItem value="nenhum">Ninguém ainda (sem uso)</SelectItem>
+                <SelectItem value="pessoal">Pessoal</SelectItem>
+                <SelectItem value="generico">Genérico de condomínio</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {tipoVinculo === "colaborador" && (
-            <div className="space-y-2">
-              <Label>Colaborador</Label>
-              <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {colaboradores.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {tipoVinculo === "condominio" && (
+          {tipo === "generico" && (
             <div className="space-y-2">
               <Label>Condomínio</Label>
               <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
@@ -140,6 +122,20 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
               </Select>
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label>{tipo === "generico" ? "Quem responde hoje (opcional)" : "Colaborador"}</Label>
+            <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {colaboradores.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <DialogFooter>
             <Button type="submit" disabled={enviando}>

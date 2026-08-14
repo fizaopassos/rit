@@ -41,7 +41,7 @@ export default function EmailsPage() {
         toast.error("Erro ao desvincular email");
         return;
       }
-      toast.success("Email desvinculado");
+      toast.success("Responsável removido");
       carregar();
     } catch {
       toast.error("Erro de conexão com o servidor");
@@ -58,7 +58,7 @@ export default function EmailsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Emails Workspace</h1>
           <p className="text-muted-foreground text-sm">
-            Vinculados a colaborador (pessoal) ou a condomínio (genérico).
+            Pessoal (colaborador) ou genérico (condomínio, com responsável atual).
           </p>
         </div>
         <NovoEmailDialog onCriado={carregar} />
@@ -67,7 +67,7 @@ export default function EmailsPage() {
       {semVinculoAtivo.length > 0 && (
         <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 p-4">
           <p className="font-medium text-destructive">
-            {semVinculoAtivo.length} email(s) vinculado(s) a colaborador inativo
+            {semVinculoAtivo.length} email(s) com responsável inativo
           </p>
           <p className="text-muted-foreground text-xs">
             Revise antes que alguém desligado continue com acesso ativo.
@@ -88,7 +88,10 @@ export default function EmailsPage() {
                 <div>
                   <p className="font-medium">{e.email}</p>
                   <p className="text-muted-foreground text-xs">
-                    {e.colaborador ? e.colaborador.nome : e.condominio ? `Condomínio: ${e.condominio.nome}` : "Sem vínculo"}
+                    {e.condominio && `Condomínio: ${e.condominio.nome}`}
+                    {e.condominio && e.colaborador && " · "}
+                    {e.colaborador && `Responsável: ${e.colaborador.nome}`}
+                    {!e.condominio && !e.colaborador && "Sem vínculo"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -97,7 +100,7 @@ export default function EmailsPage() {
                   </span>
                   <AlterarResponsavelEmailDialog
                     emailId={e.id}
-                    dadosAtuais={{ colaboradorId: e.colaborador?.id ?? null, condominioId: e.condominio?.id ?? null }}
+                    colaboradorAtualId={e.colaborador?.id ?? null}
                     onAlterado={carregar}
                   />
                   {e.status === "EM_USO" && (
