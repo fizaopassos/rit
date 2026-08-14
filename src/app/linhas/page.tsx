@@ -3,6 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, LoadingState } from "@/components/empty-loading-states";
+import { StatusBadge } from "@/components/status-badge";
 import { NovaLinhaDialog } from "@/components/nova-linha-dialog";
 import { AlterarResponsavelLinhaDialog } from "@/components/alterar-responsavel-linha-dialog";
 import { EditarLinhaDialog } from "@/components/editar-linha-dialog";
@@ -64,19 +75,15 @@ export default function LinhasPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Linhas móveis</h1>
-          <p className="text-muted-foreground text-sm">
-            Chips vinculados a colaboradores, com controle de cobrança.
-          </p>
-        </div>
-        <NovaLinhaDialog onCriada={carregar} />
-      </div>
+    <div className="mx-auto max-w-4xl p-8">
+      <PageHeader
+        title="Linhas móveis"
+        description="Chips vinculados a colaboradores, com controle de cobrança."
+        action={<NovaLinhaDialog onCriada={carregar} />}
+      />
 
       {semVinculoAtivo.length > 0 && (
-        <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 p-4">
+        <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <p className="font-medium text-destructive">
             {semVinculoAtivo.length} linha(s) ativa(s) sem colaborador ativo vinculado
           </p>
@@ -87,51 +94,66 @@ export default function LinhasPage() {
       )}
 
       {carregando ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
+        <LoadingState rows={4} />
       ) : linhas.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Nenhuma linha cadastrada ainda.</p>
+        <EmptyState message="Nenhuma linha cadastrada ainda." />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {linhas.map((l) => {
-            const alerta = l.status === "ATIVA" && (!l.colaborador || l.colaborador.status !== "ATIVO");
-            return (
-              <li key={l.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="font-medium">
-                    {l.numero} {l.operadora && <span className="text-muted-foreground font-normal">· {l.operadora}</span>}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {l.colaborador ? l.colaborador.nome : "Sem vínculo"}
-                    {l.valorMensal && ` · R$ ${l.valorMensal}/mês`}
-                    {l.franquiaDadosGb && ` · ${l.franquiaDadosGb}GB`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      alerta ? "bg-destructive/10 text-destructive" : "bg-muted"
-                    }`}
-                  >
-                    {STATUS_LABEL[l.status]}
-                  </span>
-                  {l.status !== "CANCELADA" && (
-                    <>
-                      <EditarLinhaDialog linhaId={l.id} dadosAtuais={l} onEditado={carregar} />
-                      <AlterarResponsavelLinhaDialog
-                        linhaId={l.id}
-                        colaboradorAtualId={l.colaborador?.id ?? null}
-                        onAlterado={carregar}
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Linha</TableHead>
+                <TableHead>Responsável</TableHead>
+                <TableHead>Custo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-px" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {linhas.map((l) => {
+                const alerta = l.status === "ATIVA" && (!l.colaborador || l.colaborador.status !== "ATIVO");
+                return (
+                  <TableRow key={l.id}>
+                    <TableCell>
+                      <div className="font-medium">{l.numero}</div>
+                      {l.operadora && <div className="text-muted-foreground text-xs">{l.operadora}</div>}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {l.colaborador ? l.colaborador.nome : "Sem vínculo"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {l.valorMensal ? `R$ ${l.valorMensal}/mês` : "—"}
+                      {l.franquiaDadosGb && ` · ${l.franquiaDadosGb}GB`}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        label={STATUS_LABEL[l.status]}
+                        tom={alerta ? "perigo" : l.status === "ATIVA" ? "sucesso" : "neutro"}
                       />
-                      <Button variant="ghost" size="sm" onClick={() => cancelar(l.id)}>
-                        Cancelar
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {l.status !== "CANCELADA" && (
+                          <>
+                            <EditarLinhaDialog linhaId={l.id} dadosAtuais={l} onEditado={carregar} />
+                            <AlterarResponsavelLinhaDialog
+                              linhaId={l.id}
+                              colaboradorAtualId={l.colaborador?.id ?? null}
+                              onAlterado={carregar}
+                            />
+                            <Button variant="ghost" size="sm" onClick={() => cancelar(l.id)}>
+                              Cancelar
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { NovoModeloDialog } from "@/components/novo-modelo-dialog";
 import { EditarModeloDialog } from "@/components/editar-modelo-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
@@ -19,6 +31,7 @@ type Modelo = {
 export default function ModelosPage() {
   const [modelos, setModelos] = useState<Modelo[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -36,46 +49,69 @@ export default function ModelosPage() {
     carregar();
   }, [carregar]);
 
+  const filtrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return modelos;
+    return modelos.filter(
+      (m) => m.nome.toLowerCase().includes(termo) || m.marca.nome.toLowerCase().includes(termo),
+    );
+  }, [modelos, busca]);
+
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Modelos</h1>
-          <p className="text-muted-foreground text-sm">
-            Modelos vinculados a uma marca, reutilizados no cadastro de
-            equipamento.
-          </p>
-        </div>
-        <NovoModeloDialog onCriado={carregar} />
+    <div className="mx-auto max-w-3xl p-8">
+      <PageHeader
+        title="Modelos"
+        description="Modelos vinculados a uma marca, reutilizados no cadastro de equipamento."
+        action={<NovoModeloDialog onCriado={carregar} />}
+      />
+
+      <div className="relative mb-4">
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        <Input
+          placeholder="Buscar por marca ou modelo..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="max-w-sm pl-9"
+        />
       </div>
 
       {carregando ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
-      ) : modelos.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          Nenhum modelo cadastrado ainda.
-        </p>
+        <LoadingState rows={4} />
+      ) : filtrados.length === 0 ? (
+        <EmptyState
+          message={
+            modelos.length === 0
+              ? "Nenhum modelo cadastrado ainda."
+              : "Nenhum modelo encontrado com essa busca."
+          }
+        />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {modelos.map((m) => (
-            <li key={m.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <span className="font-medium">
-                  {m.marca.nome} {m.nome}
-                </span>
-                <p className="text-muted-foreground text-xs">
-                  {TIPO_EQUIPAMENTO_LABEL[m.tipoEquipamento]} · vida útil {m.vidaUtilAnos ?? "—"} anos
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground text-sm">
-                  {m._count.equipamentos} equipamento(s)
-                </span>
-                <EditarModeloDialog modeloId={m.id} dadosAtuais={m} onEditado={carregar} />
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Modelo</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Vida útil</TableHead>
+                <TableHead>Equipamentos</TableHead>
+                <TableHead className="w-px" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtrados.map((m) => (
+                <TableRow key={m.id}>
+                  <TableCell className="font-medium">{m.marca.nome} {m.nome}</TableCell>
+                  <TableCell className="text-muted-foreground">{TIPO_EQUIPAMENTO_LABEL[m.tipoEquipamento]}</TableCell>
+                  <TableCell className="text-muted-foreground">{m.vidaUtilAnos ?? "—"} anos</TableCell>
+                  <TableCell className="text-muted-foreground">{m._count.equipamentos}</TableCell>
+                  <TableCell>
+                    <EditarModeloDialog modeloId={m.id} dadosAtuais={m} onEditado={carregar} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

@@ -1,20 +1,24 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Nav } from "@/components/nav";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const semNav = pathname.startsWith("/login");
+  const semChrome = pathname.startsWith("/login");
 
-  if (semNav) {
+  if (semChrome) {
     return <>{children}</>;
   }
 
   return (
-    <>
-      <Nav />
-      {children}
-    </>
+    <div className="min-h-screen">
+      <AppSidebar />
+      <div className="flex min-h-screen flex-col pl-24">
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+      </div>
+    </div>
   );
 }

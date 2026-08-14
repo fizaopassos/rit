@@ -2,13 +2,23 @@ import { prisma } from "@/lib/prisma";
 import { ProprietarioTipo, TipoEquipamento } from "@prisma/client";
 
 export async function listarEquipamentos() {
-  return prisma.equipamento.findMany({
+  const equipamentos = await prisma.equipamento.findMany({
     orderBy: { criadoEm: "desc" },
     include: {
       modelo: { include: { marca: true } },
       condominio: true,
+      alocacoes: {
+        where: { dataFim: null },
+        take: 1,
+        include: { colaborador: { select: { id: true, nome: true } } },
+      },
     },
   });
+
+  return equipamentos.map((eq) => ({
+    ...eq,
+    responsavel: eq.alocacoes[0]?.colaborador ?? null,
+  }));
 }
 
 // ADM-0001 (administradora) ou COND-{codigo}-0001 (associação/condomínio)

@@ -10,6 +10,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { StatusBadge } from "@/components/status-badge";
 import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
 import { UploadAnexoDialog } from "@/components/upload-anexo-dialog";
 import { NovaManutencaoDialog } from "@/components/nova-manutencao-dialog";
@@ -21,6 +22,13 @@ const STATUS_LABEL: Record<string, string> = {
   EM_USO: "Em uso",
   EM_MANUTENCAO: "Em manutenção",
   BAIXADO: "Baixado",
+};
+
+const STATUS_TOM: Record<string, "neutro" | "sucesso" | "aviso" | "perigo"> = {
+  EM_ESTOQUE: "neutro",
+  EM_USO: "sucesso",
+  EM_MANUTENCAO: "aviso",
+  BAIXADO: "perigo",
 };
 
 const MOTIVO_LABEL: Record<string, string> = {
@@ -158,9 +166,7 @@ export default function EquipamentoPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
-            {STATUS_LABEL[equipamento.status]}
-          </span>
+          <StatusBadge label={STATUS_LABEL[equipamento.status]} tom={STATUS_TOM[equipamento.status]} />
           <EditarEquipamentoDialog equipamentoId={equipamento.id} dadosAtuais={equipamento} onEditado={carregar} />
         </div>
       </div>

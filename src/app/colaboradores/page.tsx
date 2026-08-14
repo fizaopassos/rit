@@ -1,8 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, LoadingState } from "@/components/empty-loading-states";
+import { StatusBadge } from "@/components/status-badge";
 import { NovoColaboradorDialog } from "@/components/novo-colaborador-dialog";
 import { usePerfil } from "@/lib/use-perfil";
 
@@ -17,58 +30,11 @@ type Colaborador = {
   email: string | null;
 };
 
-function ListaColaboradores({
-  colaboradores,
-  isConsulta,
-}: {
-  colaboradores: Colaborador[];
-  isConsulta: boolean;
-}) {
-  return (
-    <ul className="divide-y rounded-md border">
-      {colaboradores.map((c) => {
-        const conteudo = (
-          <>
-            <div>
-              <span className="font-medium">{c.nome}</span>
-              <p className="text-muted-foreground text-xs">
-                {isConsulta
-                  ? (c.email ?? "sem email")
-                  : `${c.cargo ?? "—"} ${c.condominio ? `· ${c.condominio.nome}` : ""}`}
-              </p>
-            </div>
-            <span className="text-muted-foreground font-mono text-sm">
-              {isConsulta ? (c.telefone ?? "—") : (c.cpfMascarado ?? "—")}
-            </span>
-          </>
-        );
-
-        if (isConsulta) {
-          return (
-            <li key={c.id} className="flex items-center justify-between px-4 py-3">
-              {conteudo}
-            </li>
-          );
-        }
-
-        return (
-          <li key={c.id}>
-            <Link
-              href={`/colaboradores/${c.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
-            >
-              {conteudo}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
 export default function ColaboradoresPage() {
+  const router = useRouter();
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
   const [mostrarInativos, setMostrarInativos] = useState(false);
   const perfil = usePerfil();
   const isConsulta = perfil === "CONSULTA";
@@ -89,32 +55,106 @@ export default function ColaboradoresPage() {
     carregar();
   }, [carregar]);
 
-  const ativos = colaboradores.filter((c) => isConsulta || c.status !== "INATIVO");
-  const inativos = colaboradores.filter((c) => !isConsulta && c.status === "INATIVO");
+  const termo = busca.trim().toLowerCase();
+  const bate = useCallback(
+    (c: Colaborador) =>
+      !termo ||
+      c.nome.toLowerCase().includes(termo) ||
+      (c.cargo ?? "").toLowerCase().includes(termo),
+    [termo],
+  );
+
+  const ativos = useMemo(
+    () => colaboradores.filter((c) => (isConsulta || c.status !== "INATIVO") && bate(c)),
+    [colaboradores, isConsulta, bate],
+  );
+  const inativos = useMemo(
+    () => (isConsulta ? [] : colaboradores.filter((c) => c.status === "INATIVO" && bate(c))),
+    [colaboradores, isConsulta, bate],
+  );
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Colaboradores</h1>
-          <p className="text-muted-foreground text-sm">
-            {isConsulta
-              ? "Nome, telefone e email de cada colaborador."
-              : "Quem recebe equipamento — CPF sempre mascarado por padrão."}
-          </p>
-        </div>
-        {!isConsulta && <NovoColaboradorDialog onCriado={carregar} />}
+    <div className="mx-auto max-w-5xl p-8">
+      <PageHeader
+        title="Colaboradores"
+        description={
+          isConsulta
+            ? "Nome, telefone e email de cada colaborador."
+            : "Quem recebe equipamento — CPF sempre mascarado por padrão."
+        }
+        action={!isConsulta && <NovoColaboradorDialog onCriado={carregar} />}
+      />
+
+      <div className="relative mb-4">
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        <Input
+          placeholder="Buscar por nome ou cargo..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="max-w-sm pl-9"
+        />
       </div>
 
       {carregando ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
-      ) : colaboradores.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          Nenhum colaborador cadastrado ainda.
-        </p>
+        <LoadingState rows={5} />
+      ) : ativos.length === 0 && inativos.length === 0 ? (
+        <EmptyState
+          message={
+            colaboradores.length === 0
+              ? "Nenhum colaborador cadastrado ainda."
+              : "Nenhum colaborador encontrado com essa busca."
+          }
+        />
       ) : (
         <>
-          <ListaColaboradores colaboradores={ativos} isConsulta={isConsulta} />
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  {isConsulta ? (
+                    <>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Email</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Condomínio</TableHead>
+                      <TableHead>CPF</TableHead>
+                    </>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ativos.map((c) => (
+                  <TableRow
+                    key={c.id}
+                    className={isConsulta ? "" : "cursor-pointer"}
+                    onClick={() => !isConsulta && router.push(`/colaboradores/${c.id}`)}
+                  >
+                    <TableCell className="font-medium">{c.nome}</TableCell>
+                    {isConsulta ? (
+                      <>
+                        <TableCell className="text-muted-foreground font-mono text-sm">
+                          {c.telefone ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{c.email ?? "—"}</TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell className="text-muted-foreground">{c.cargo ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{c.condominio?.nome ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-sm">
+                          {c.cpfMascarado ?? "—"}
+                        </TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
           {!isConsulta && inativos.length > 0 && (
             <div className="mt-6">
@@ -125,26 +165,26 @@ export default function ColaboradoresPage() {
                 {mostrarInativos ? "Ocultar" : "Mostrar"} inativos ({inativos.length})
               </button>
               {mostrarInativos && (
-                <ul className="divide-y rounded-md border opacity-70">
-                  {inativos.map((c) => (
-                    <li key={c.id}>
-                      <Link
-                        href={`/colaboradores/${c.id}`}
-                        className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
-                      >
-                        <div>
-                          <span className="font-medium">{c.nome}</span>
-                          <p className="text-muted-foreground text-xs">
-                            {c.cargo ?? "—"} {c.condominio ? `· ${c.condominio.nome}` : ""}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
-                          Inativo
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <div className="rounded-lg border opacity-70">
+                  <Table>
+                    <TableBody>
+                      {inativos.map((c) => (
+                        <TableRow
+                          key={c.id}
+                          className="cursor-pointer"
+                          onClick={() => router.push(`/colaboradores/${c.id}`)}
+                        >
+                          <TableCell className="font-medium">{c.nome}</TableCell>
+                          <TableCell className="text-muted-foreground">{c.cargo ?? "—"}</TableCell>
+                          <TableCell className="text-muted-foreground">{c.condominio?.nome ?? "—"}</TableCell>
+                          <TableCell>
+                            <StatusBadge label="Inativo" tom="perigo" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </div>
           )}

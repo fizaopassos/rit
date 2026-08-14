@@ -2,6 +2,17 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, LoadingState } from "@/components/empty-loading-states";
+import { StatusBadge } from "@/components/status-badge";
 import { NovoUsuarioDialog } from "@/components/novo-usuario-dialog";
 import { EditarUsuarioDialog } from "@/components/editar-usuario-dialog";
 
@@ -40,42 +51,46 @@ export default function UsuariosPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Usuários do sistema</h1>
-          <p className="text-muted-foreground text-sm">
-            Quem tem login no RIT — TI (Admin) ou recepção (Consulta).
-          </p>
-        </div>
-        <NovoUsuarioDialog onCriado={carregar} />
-      </div>
+      <PageHeader
+        title="Usuários do sistema"
+        description="Quem tem login no RIT — TI (Admin) ou recepção (Consulta)."
+        action={<NovoUsuarioDialog onCriado={carregar} />}
+      />
 
       {carregando ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
+        <LoadingState rows={3} />
       ) : usuarios.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Nenhum usuário cadastrado ainda.</p>
+        <EmptyState message="Nenhum usuário cadastrado ainda." />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {usuarios.map((u) => (
-            <li key={u.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="font-medium">{u.nome}</p>
-                <p className="text-muted-foreground text-xs">{u.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">{PERFIL_LABEL[u.perfil]}</span>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    u.ativo ? "bg-muted" : "bg-destructive/10 text-destructive"
-                  }`}
-                >
-                  {u.ativo ? "Ativo" : "Inativo"}
-                </span>
-                <EditarUsuarioDialog usuarioId={u.id} dadosAtuais={u} onEditado={carregar} />
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Perfil</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-px" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {usuarios.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>
+                    <div className="font-medium">{u.nome}</div>
+                    <div className="text-muted-foreground text-xs">{u.email}</div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{PERFIL_LABEL[u.perfil]}</TableCell>
+                  <TableCell>
+                    <StatusBadge label={u.ativo ? "Ativo" : "Inativo"} tom={u.ativo ? "sucesso" : "perigo"} />
+                  </TableCell>
+                  <TableCell>
+                    <EditarUsuarioDialog usuarioId={u.id} dadosAtuais={u} onEditado={carregar} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

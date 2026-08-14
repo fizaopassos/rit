@@ -3,6 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, LoadingState } from "@/components/empty-loading-states";
+import { StatusBadge } from "@/components/status-badge";
 import { NovoEmailDialog } from "@/components/novo-email-dialog";
 import { AlterarResponsavelEmailDialog } from "@/components/alterar-responsavel-email-dialog";
 
@@ -53,19 +64,15 @@ export default function EmailsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Emails Workspace</h1>
-          <p className="text-muted-foreground text-sm">
-            Pessoal (colaborador) ou genérico (condomínio, com responsável atual).
-          </p>
-        </div>
-        <NovoEmailDialog onCriado={carregar} />
-      </div>
+    <div className="mx-auto max-w-3xl p-8">
+      <PageHeader
+        title="Emails Workspace"
+        description="Pessoal (colaborador) ou genérico (condomínio, com responsável atual)."
+        action={<NovoEmailDialog onCriado={carregar} />}
+      />
 
       {semVinculoAtivo.length > 0 && (
-        <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 p-4">
+        <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <p className="font-medium text-destructive">
             {semVinculoAtivo.length} email(s) com responsável inativo
           </p>
@@ -76,41 +83,58 @@ export default function EmailsPage() {
       )}
 
       {carregando ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
+        <LoadingState rows={4} />
       ) : emails.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Nenhum email cadastrado ainda.</p>
+        <EmptyState message="Nenhum email cadastrado ainda." />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {emails.map((e) => {
-            const alerta = e.status === "EM_USO" && e.colaborador && e.colaborador.status !== "ATIVO";
-            return (
-              <li key={e.id} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="font-medium">{e.email}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {e.condominio && `Condomínio: ${e.condominio.nome}`}
-                    {e.condominio && e.colaborador && " · "}
-                    {e.colaborador && `Responsável: ${e.colaborador.nome}`}
-                    {!e.condominio && !e.colaborador && "Sem vínculo"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${alerta ? "bg-destructive/10 text-destructive" : e.status === "EM_USO" ? "bg-muted" : "bg-destructive/10 text-destructive"}`}>
-                    {e.status === "EM_USO" ? "Em uso" : "Sem uso"}
-                  </span>
-                  <AlterarResponsavelEmailDialog
-                    emailId={e.id}
-                    colaboradorAtualId={e.colaborador?.id ?? null}
-                    onAlterado={carregar}
-                  />
-                  {e.status === "EM_USO" && (
-                    <Button variant="ghost" size="sm" onClick={() => desvincular(e.id)}>Desvincular</Button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Email</TableHead>
+                <TableHead>Vínculo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-px" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {emails.map((e) => {
+                const alerta = e.status === "EM_USO" && e.colaborador && e.colaborador.status !== "ATIVO";
+                return (
+                  <TableRow key={e.id}>
+                    <TableCell className="font-medium">{e.email}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {e.condominio && `Condomínio: ${e.condominio.nome}`}
+                      {e.condominio && e.colaborador && " · "}
+                      {e.colaborador && `Responsável: ${e.colaborador.nome}`}
+                      {!e.condominio && !e.colaborador && "Sem vínculo"}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        label={e.status === "EM_USO" ? "Em uso" : "Sem uso"}
+                        tom={alerta ? "perigo" : e.status === "EM_USO" ? "sucesso" : "neutro"}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <AlterarResponsavelEmailDialog
+                          emailId={e.id}
+                          colaboradorAtualId={e.colaborador?.id ?? null}
+                          onAlterado={carregar}
+                        />
+                        {e.status === "EM_USO" && (
+                          <Button variant="ghost" size="sm" onClick={() => desvincular(e.id)}>
+                            Desvincular
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

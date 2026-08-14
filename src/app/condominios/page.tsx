@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { NovoCondominioDialog } from "@/components/novo-condominio-dialog";
 import { EditarCondominioDialog } from "@/components/editar-condominio-dialog";
 
@@ -15,6 +27,7 @@ type Condominio = {
 export default function CondominiosPage() {
   const [condominios, setCondominios] = useState<Condominio[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -32,41 +45,67 @@ export default function CondominiosPage() {
     carregar();
   }, [carregar]);
 
+  const filtrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return condominios;
+    return condominios.filter(
+      (c) => c.nome.toLowerCase().includes(termo) || c.codigo.toLowerCase().includes(termo),
+    );
+  }, [condominios, busca]);
+
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Condomínios</h1>
-          <p className="text-muted-foreground text-sm">
-            Condomínios administrados pela Retha.
-          </p>
-        </div>
-        <NovoCondominioDialog onCriado={carregar} />
+    <div className="mx-auto max-w-3xl p-8">
+      <PageHeader
+        title="Condomínios"
+        description="Condomínios administrados pela Retha."
+        action={<NovoCondominioDialog onCriado={carregar} />}
+      />
+
+      <div className="relative mb-4">
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        <Input
+          placeholder="Buscar por nome ou código..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="max-w-sm pl-9"
+        />
       </div>
 
       {carregando ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
-      ) : condominios.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          Nenhum condomínio cadastrado ainda.
-        </p>
+        <LoadingState rows={4} />
+      ) : filtrados.length === 0 ? (
+        <EmptyState
+          message={
+            condominios.length === 0
+              ? "Nenhum condomínio cadastrado ainda."
+              : "Nenhum condomínio encontrado com essa busca."
+          }
+        />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {condominios.map((c) => (
-            <li key={c.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <span className="font-medium">{c.nome}</span>
-                {c.endereco && (
-                  <p className="text-muted-foreground text-xs">{c.endereco}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground text-sm">{c.codigo}</span>
-                <EditarCondominioDialog condominioId={c.id} dadosAtuais={c} onEditado={carregar} />
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Código</TableHead>
+                <TableHead>Endereço</TableHead>
+                <TableHead className="w-px" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtrados.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.nome}</TableCell>
+                  <TableCell className="text-muted-foreground font-mono text-sm">{c.codigo}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.endereco ?? "—"}</TableCell>
+                  <TableCell>
+                    <EditarCondominioDialog condominioId={c.id} dadosAtuais={c} onEditado={carregar} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 
 export default function LoginPage() {
@@ -51,8 +51,15 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>RIT — Retha Ativos</CardTitle>
+        <CardHeader className="items-center text-center">
+          <Image
+            src="/logo.png"
+            alt="Retha"
+            width={160}
+            height={160}
+            className="mb-2 h-16 w-auto"
+            priority
+          />
           <CardDescription>
             Entre com sua conta de TI para acessar o controle de ativos.
           </CardDescription>

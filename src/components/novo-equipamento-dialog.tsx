@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { IdCard, Receipt, Network, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,15 @@ const PROPRIETARIO_LABEL: Record<string, string> = {
   ASSOCIACAO_CONDOMINIO: "Associação / Condomínio",
 };
 
+function SecaoTitulo({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-sm font-medium">
+      <Icon className="text-muted-foreground size-4" />
+      {children}
+    </div>
+  );
+}
+
 export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
   const [open, setOpen] = useState(false);
   const [modelos, setModelos] = useState<Modelo[]>([]);
@@ -55,8 +65,8 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
   const [macAddress, setMacAddress] = useState("");
   const [numeroRamal, setNumeroRamal] = useState("");
 
-  const [observacoes, setObservacoes] = useState("");
   const [itensInclusos, setItensInclusos] = useState("");
+  const [observacoes, setObservacoes] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -79,8 +89,8 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
     setIpLocal("");
     setMacAddress("");
     setNumeroRamal("");
-    setObservacoes("");
     setItensInclusos("");
+    setObservacoes("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -145,8 +155,10 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-3">
+            <SecaoTitulo icon={IdCard}>Identificação</SecaoTitulo>
+
             <div className="space-y-2">
               <Label>Modelo</Label>
               <Select value={modeloId} onValueChange={(v) => setModeloId(v ?? undefined)}>
@@ -199,13 +211,11 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
             </div>
           </div>
 
-          <div className="space-y-3 border-t pt-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase">
-              Nota fiscal
-            </p>
+          <div className="space-y-3 border-t pt-5">
+            <SecaoTitulo icon={Receipt}>Aquisição</SecaoTitulo>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="nfNumero">Número</Label>
+                <Label htmlFor="nfNumero">Nº da NF</Label>
                 <Input id="nfNumero" value={notaFiscalNumero} onChange={(e) => setNotaFiscalNumero(e.target.value)} />
               </div>
               <div className="space-y-2">
@@ -225,10 +235,8 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
             </div>
           </div>
 
-          <div className="space-y-3 border-t pt-4">
-            <p className="text-muted-foreground text-xs font-medium uppercase">
-              Rede (opcional)
-            </p>
+          <div className="space-y-3 border-t pt-5">
+            <SecaoTitulo icon={Network}>Rede (opcional)</SecaoTitulo>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="ip">IP local</Label>
@@ -245,14 +253,16 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
             </div>
           </div>
 
-          <div className="space-y-2 border-t pt-4">
-            <Label htmlFor="itensInclusos">Itens inclusos (separados por vírgula)</Label>
-            <Input id="itensInclusos" value={itensInclusos} onChange={(e) => setItensInclusos(e.target.value)} placeholder="Fonte carregadora, Cabo USB-C, Capa protetora" />
-          </div>
-
-          <div className="space-y-2 border-t pt-4">
-            <Label htmlFor="obs">Observações</Label>
-            <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+          <div className="space-y-3 border-t pt-5">
+            <SecaoTitulo icon={FileText}>Informações adicionais</SecaoTitulo>
+            <div className="space-y-2">
+              <Label htmlFor="itens">Itens inclusos</Label>
+              <Input id="itens" value={itensInclusos} onChange={(e) => setItensInclusos(e.target.value)} placeholder="Fonte carregadora, Cabo USB-C, Capa protetora" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="obs">Observações</Label>
+              <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+            </div>
           </div>
 
           <DialogFooter>

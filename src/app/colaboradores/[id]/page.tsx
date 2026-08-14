@@ -4,6 +4,16 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { StatusBadge } from "@/components/status-badge";
 import { VincularEquipamentoColaboradorDialog } from "@/components/vincular-equipamento-colaborador-dialog";
 import { DevolverEmLoteDialog } from "@/components/devolver-em-lote-dialog";
 import { EditarColaboradorDialog } from "@/components/editar-colaborador-dialog";
@@ -89,27 +99,29 @@ export default function ColaboradorPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{colaborador.nome}</h1>
-          <p className="text-muted-foreground text-sm">
-            {colaborador.cargo ?? "—"} {colaborador.condominio ? `· ${colaborador.condominio.nome}` : ""}
-            {" · "}
-            <span className={colaborador.status === "INATIVO" ? "text-destructive" : ""}>
-              {colaborador.status === "ATIVO" ? "Ativo" : "Inativo"}
-            </span>
-          </p>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="text-muted-foreground font-mono text-sm">
-              {cpfRevelado ?? colaborador.cpfMascarado ?? "—"}
-            </span>
-            {colaborador.cpfMascarado && !cpfRevelado && (
-              <Button variant="ghost" size="sm" onClick={revelarCpf}>Ver CPF</Button>
-            )}
+      <Card className="mb-6">
+        <CardContent className="flex items-start justify-between px-6 py-5">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{colaborador.nome}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {colaborador.cargo ?? "—"} {colaborador.condominio ? `· ${colaborador.condominio.nome}` : ""}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <StatusBadge
+                label={colaborador.status === "ATIVO" ? "Ativo" : "Inativo"}
+                tom={colaborador.status === "ATIVO" ? "sucesso" : "perigo"}
+              />
+              <span className="text-muted-foreground font-mono text-sm">
+                {cpfRevelado ?? colaborador.cpfMascarado ?? "—"}
+              </span>
+              {colaborador.cpfMascarado && !cpfRevelado && (
+                <Button variant="ghost" size="sm" onClick={revelarCpf}>Ver CPF</Button>
+              )}
+            </div>
           </div>
-        </div>
-        <EditarColaboradorDialog colaboradorId={colaborador.id} dadosAtuais={colaborador} onEditado={carregar} />
-      </div>
+          <EditarColaboradorDialog colaboradorId={colaborador.id} dadosAtuais={colaborador} onEditado={carregar} />
+        </CardContent>
+      </Card>
 
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-medium">Equipamentos vinculados</h2>
@@ -124,31 +136,56 @@ export default function ColaboradorPage() {
       </div>
 
       {colaborador.alocacoes.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Nenhum equipamento vinculado no momento.</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+          <p className="text-muted-foreground text-sm">Nenhum equipamento vinculado no momento.</p>
+        </div>
       ) : (
-        <ul className="divide-y rounded-md border">
-          {colaborador.alocacoes.map((a) => (
-            <li key={a.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-              <input
-                type="checkbox"
-                checked={selecionados.includes(a.equipamento.id)}
-                onChange={() => toggleSelecionado(a.equipamento.id)}
-                className="size-4"
-              />
-              <div className="flex-1">
-                <p className="font-medium">
-                  {a.equipamento.modelo.marca.nome} {a.equipamento.modelo.nome}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {a.equipamento.numeroPatrimonio} · {TIPO_EQUIPAMENTO_LABEL[a.equipamento.tipoEquipamento]}
-                </p>
-              </div>
-              <a href={`/api/alocacoes/${a.id}/comodato`} target="_blank" rel="noreferrer" className="text-primary text-xs underline underline-offset-2">
-                Gerar comodato
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10" />
+                <TableHead>Equipamento</TableHead>
+                <TableHead>Patrimônio</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead className="w-px" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {colaborador.alocacoes.map((a) => (
+                <TableRow key={a.id}>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selecionados.includes(a.equipamento.id)}
+                      onChange={() => toggleSelecionado(a.equipamento.id)}
+                      className="size-4"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {a.equipamento.modelo.marca.nome} {a.equipamento.modelo.nome}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground font-mono text-xs">
+                    {a.equipamento.numeroPatrimonio}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {TIPO_EQUIPAMENTO_LABEL[a.equipamento.tipoEquipamento]}
+                  </TableCell>
+                  <TableCell>
+                    <a
+                      href={`/api/alocacoes/${a.id}/comodato`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary text-xs underline underline-offset-2"
+                    >
+                      Gerar comodato
+                    </a>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );
