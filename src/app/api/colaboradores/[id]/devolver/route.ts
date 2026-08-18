@@ -12,6 +12,7 @@ const MOTIVOS = [
 const schema = z.object({
   equipamentoIds: z.array(z.string()).min(1, "Selecione ao menos um equipamento"),
   motivoDevolucao: z.enum(MOTIVOS),
+  itensDevolucao: z.string().optional(),
 });
 
 export async function POST(
@@ -34,6 +35,7 @@ export async function POST(
       id,
       parsed.data.equipamentoIds,
       parsed.data.motivoDevolucao,
+      parsed.data.itensDevolucao,
     );
     return NextResponse.json({ alocacaoIds });
   } catch (err) {

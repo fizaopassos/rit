@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { cifrarCpf, decifrarCpf, mascararCpf } from "@/lib/cpf";
+import { ProprietarioTipo, TipoPessoa } from "@prisma/client";
 
 export async function listarColaboradores() {
   const colaboradores = await prisma.colaborador.findMany({
@@ -11,11 +12,12 @@ export async function listarColaboradores() {
     },
   });
 
-  // CPF nunca sai completo daqui — só mascarado.
+  // CPF nunca sai completo daqui — só mascarado. CNPJ não é dado sensível
+  // (é público via Receita Federal), então sai normal.
   return colaboradores.map((c) => ({
     ...c,
     cpfMascarado: c.cpfCifrado ? mascararCpf(decifrarCpf(c.cpfCifrado)) : null,
-    cpfCifrado: undefined, // remove o campo bruto da resposta
+    cpfCifrado: undefined,
     telefone: c.linhas[0]?.numero ?? null,
     email: c.emails[0]?.email ?? null,
   }));
@@ -23,16 +25,20 @@ export async function listarColaboradores() {
 
 export async function criarColaborador(dados: {
   nome: string;
-  rg?: string;
   cpf?: string;
+  cnpj?: string;
+  tipoPessoa: TipoPessoa;
   cargo?: string;
+  vinculoTipo: ProprietarioTipo;
   condominioId?: string;
 }) {
   return prisma.colaborador.create({
     data: {
       nome: dados.nome,
-      rg: dados.rg,
       cargo: dados.cargo,
+      tipoPessoa: dados.tipoPessoa,
+      cnpj: dados.cnpj,
+      vinculoTipo: dados.vinculoTipo,
       condominioId: dados.condominioId || null,
       cpfCifrado: dados.cpf ? cifrarCpf(dados.cpf) : undefined,
     },
@@ -54,8 +60,10 @@ export async function atualizarColaborador(
   id: string,
   dados: {
     nome: string;
-    rg?: string;
     cargo?: string;
+    tipoPessoa: TipoPessoa;
+    cnpj?: string;
+    vinculoTipo: ProprietarioTipo;
     condominioId?: string;
     status: "ATIVO" | "INATIVO";
     cpf?: string; // opcional — só re-cifra se um valor novo for enviado
@@ -65,8 +73,10 @@ export async function atualizarColaborador(
     where: { id },
     data: {
       nome: dados.nome,
-      rg: dados.rg,
       cargo: dados.cargo,
+      tipoPessoa: dados.tipoPessoa,
+      cnpj: dados.cnpj,
+      vinculoTipo: dados.vinculoTipo,
       condominioId: dados.condominioId || null,
       status: dados.status,
       ...(dados.cpf ? { cpfCifrado: cifrarCpf(dados.cpf) } : {}),

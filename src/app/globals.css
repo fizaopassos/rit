@@ -140,3 +140,9 @@
     @apply font-sans;
   }
 }
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #4376B1 0%, #1B2E4D 100%);
+}
+.bg-alert-gradient {
+  background: linear-gradient(135deg, #DC2626 0%, #7F1D1D 100%);
+}

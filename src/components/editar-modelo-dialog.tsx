@@ -108,9 +108,11 @@ export function EditarModeloDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Marca</Label>
-            <Select value={marcaId} onValueChange={(v) => v && setMarcaId(v)}>
+                        <Select value={marcaId} onValueChange={(v) => v && setMarcaId(v)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(valor: string | null) => marcas.find((m) => m.id === valor)?.nome ?? ""}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {marcas.map((m) => (
@@ -129,14 +131,11 @@ export function EditarModeloDialog({
             <Label>Tipo de equipamento</Label>
             <Select value={tipoEquipamento} onValueChange={(v) => v && setTipoEquipamento(v)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+              <SelectValue>
+  {(valor: string | null) => (valor ? TIPO_EQUIPAMENTO_LABEL[valor as keyof typeof TIPO_EQUIPAMENTO_LABEL] : "")}
+</SelectValue>
               </SelectTrigger>
-              <SelectContent>
-                {TIPOS_EQUIPAMENTO.map((tipo) => (
-                  <SelectItem key={tipo} value={tipo}>{TIPO_EQUIPAMENTO_LABEL[tipo]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              </Select>
           </div>
 
           <div className="space-y-2">

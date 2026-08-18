@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { vincularEquipamento } from "@/services/alocacoes.service";
 
-const schema = z.object({ colaboradorId: z.string().min(1) });
+const schema = z.object({
+  colaboradorId: z.string().min(1),
+  itensEntrega: z.string().optional(),
+});
 
 export async function POST(
   req: NextRequest,
@@ -17,7 +20,7 @@ export async function POST(
   }
 
   try {
-    await vincularEquipamento(id, parsed.data.colaboradorId);
+    await vincularEquipamento(id, parsed.data.colaboradorId, parsed.data.itensEntrega);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : "Erro ao vincular";

@@ -10,11 +10,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { StatusBadge } from "@/components/status-badge";
 import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
 import { UploadAnexoDialog } from "@/components/upload-anexo-dialog";
 import { NovaManutencaoDialog } from "@/components/nova-manutencao-dialog";
 import { EditarEquipamentoDialog } from "@/components/editar-equipamento-dialog";
+import { StatusBadge } from "@/components/status-badge";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -61,6 +61,28 @@ const TIPO_MANUTENCAO_LABEL: Record<string, string> = {
   TROCA_PECA: "Troca de peça",
 };
 
+function formatarMoeda(valor: string | null) {
+  if (!valor) return "—";
+  return Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function CampoDado({
+  label,
+  valor,
+  className,
+}: {
+  label: string;
+  valor: string | null | undefined;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="text-[15px] font-medium">{valor || "—"}</p>
+    </div>
+  );
+}
+
 type Alocacao = {
   id: string;
   dataInicio: string;
@@ -102,7 +124,6 @@ type Equipamento = {
   ipLocal: string | null;
   macAddress: string | null;
   numeroRamal: string | null;
-  itensInclusos: string | null;
   observacoes: string | null;
   motivoBaixa: string | null;
   dataBaixa: string | null;
@@ -148,6 +169,10 @@ export default function EquipamentoPage() {
   }
 
   const alocacaoAtual = equipamento.alocacoes.find((a) => !a.dataFim);
+  const temDadosDeRede = Boolean(equipamento.ipLocal || equipamento.macAddress || equipamento.numeroRamal);
+  const dataAquisicaoFormatada = equipamento.dataAquisicao
+    ? new Date(equipamento.dataAquisicao).toLocaleDateString("pt-BR")
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl p-8">
@@ -202,15 +227,28 @@ export default function EquipamentoPage() {
           <TabsTrigger value="anexos">Anexos</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="dados" className="space-y-2 pt-4 text-sm">
-          <p><span className="text-muted-foreground">Nº de série:</span> {equipamento.numeroSerie ?? "—"}</p>
-          <p><span className="text-muted-foreground">Nota fiscal:</span> {equipamento.notaFiscalNumero ?? "—"} {equipamento.notaFiscalValor ? `· R$ ${equipamento.notaFiscalValor}` : ""}</p>
-          <p><span className="text-muted-foreground">Data de aquisição:</span> {equipamento.dataAquisicao ? new Date(equipamento.dataAquisicao).toLocaleDateString("pt-BR") : "—"}</p>
-          <p><span className="text-muted-foreground">IP local:</span> {equipamento.ipLocal ?? "—"}</p>
-          <p><span className="text-muted-foreground">MAC:</span> {equipamento.macAddress ?? "—"}</p>
-          <p><span className="text-muted-foreground">Ramal:</span> {equipamento.numeroRamal ?? "—"}</p>
-          <p><span className="text-muted-foreground">Itens inclusos:</span> {equipamento.itensInclusos ?? "—"}</p>
-          <p><span className="text-muted-foreground">Observações:</span> {equipamento.observacoes ?? "—"}</p>
+        <TabsContent value="dados" className="pt-4">
+          <div className="rounded-lg border">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 p-5 sm:grid-cols-3">
+              <CampoDado label="Nº de série" valor={equipamento.numeroSerie} />
+              <CampoDado label="Nota fiscal" valor={equipamento.notaFiscalNumero} />
+              <CampoDado label="Valor" valor={formatarMoeda(equipamento.notaFiscalValor)} />
+              <CampoDado label="Data de aquisição" valor={dataAquisicaoFormatada} />
+              <CampoDado label="Observações" valor={equipamento.observacoes} className="col-span-2 sm:col-span-3" />
+            </div>
+
+            {temDadosDeRede && (
+              <div className="border-t px-5 py-4">
+                <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">Rede</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <CampoDado label="IP local" valor={equipamento.ipLocal} />
+                  <CampoDado label="MAC" valor={equipamento.macAddress} />
+                  <CampoDado label="Ramal" valor={equipamento.numeroRamal} />
+                </div>
+              </div>
+            )}
+          </div>
+
           {equipamento.status === "BAIXADO" && (
             <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
               <p className="font-medium text-destructive">Equipamento baixado</p>
@@ -266,7 +304,7 @@ export default function EquipamentoPage() {
                   <p className="text-muted-foreground text-xs">{m.descricao}</p>
                   <p className="text-muted-foreground text-xs">
                     {m.pecaTrocada && `Peça: ${m.pecaTrocada} · `}
-                    {m.custo ? `R$ ${m.custo}` : "Sem custo"}
+                    {m.custo ? formatarMoeda(m.custo) : "Sem custo"}
                     {m.fornecedor && ` · ${m.fornecedor}`}
                   </p>
                   <div className="mt-2">
@@ -292,7 +330,7 @@ export default function EquipamentoPage() {
                     <p className="font-medium">{TIPO_ANEXO_LABEL[anexo.tipo] ?? anexo.tipo}</p>
                     <p className="text-muted-foreground text-xs">
                       {anexo.numeroDocumento && `NF ${anexo.numeroDocumento} · `}
-                      {anexo.valor && `R$ ${anexo.valor} · `}
+                      {anexo.valor && `${formatarMoeda(anexo.valor)} · `}
                       {new Date(anexo.criadoEm).toLocaleDateString("pt-BR")}
                     </p>
                   </div>

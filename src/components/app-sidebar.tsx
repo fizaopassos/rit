@@ -67,17 +67,17 @@ export function AppSidebar() {
         "transition-[width] duration-200 ease-out hover:w-64",
       )}
     >
-      <div className="flex h-14 shrink-0 items-center gap-3 px-4">
+         <Link href="/" className="flex h-14 shrink-0 items-center gap-3 px-4">
         <div className="flex size-8 shrink-0 items-center justify-center">
-  <Image src="/icon-mark.png" alt="Retha" width={32} height={32} className="rounded-lg" />
-</div>
+          <Image src="/icon-mark.png" alt="Retha" width={32} height={32} className="rounded-lg" />
+        </div>
         <div className="flex max-w-0 flex-col overflow-hidden leading-tight whitespace-nowrap opacity-0 transition-all duration-200 group-hover:max-w-[160px] group-hover:opacity-100">
           <span className="font-heading text-sidebar-foreground text-sm font-semibold tracking-tight">
             RIT
           </span>
           <span className="text-sidebar-foreground/50 text-[11px]">Retha Ativos</span>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-3 py-2">
         {grupos.map((grupo, i) => (

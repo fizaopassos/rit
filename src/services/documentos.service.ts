@@ -1,9 +1,26 @@
 import puppeteer from "puppeteer";
 import { prisma } from "@/lib/prisma";
+import { decifrarCpf } from "@/lib/cpf";
 import { buildComodatoHtml, buildChecklistHtml, buildChecklistHtmlLote } from "@/lib/pdf-templates";
 
+// O CPF fica cifrado no banco o tempo todo — só é decifrado aqui, no momento
+// exato de montar o documento, nunca fica em texto puro em nenhum outro lugar.
+function comCpfDecifrado<T extends { colaborador: { cpfCifrado: Buffer | null } }>(
+  registro: T,
+) {
+  return {
+    ...registro,
+    colaborador: {
+      ...registro.colaborador,
+      cpf: registro.colaborador.cpfCifrado
+        ? decifrarCpf(registro.colaborador.cpfCifrado)
+        : null,
+    },
+  };
+}
+
 async function buscarAlocacaoParaDocumento(alocacaoId: string) {
-  return prisma.alocacao.findUniqueOrThrow({
+  const alocacao = await prisma.alocacao.findUniqueOrThrow({
     where: { id: alocacaoId },
     include: {
       colaborador: true,
@@ -16,10 +33,11 @@ async function buscarAlocacaoParaDocumento(alocacaoId: string) {
       },
     },
   });
+  return comCpfDecifrado(alocacao);
 }
 
 async function buscarAlocacoesParaDocumento(alocacaoIds: string[]) {
-  return prisma.alocacao.findMany({
+  const alocacoes = await prisma.alocacao.findMany({
     where: { id: { in: alocacaoIds } },
     include: {
       colaborador: true,
@@ -32,6 +50,7 @@ async function buscarAlocacoesParaDocumento(alocacaoIds: string[]) {
       },
     },
   });
+  return alocacoes.map(comCpfDecifrado);
 }
 
 async function renderizarPdf(html: string): Promise<Buffer> {

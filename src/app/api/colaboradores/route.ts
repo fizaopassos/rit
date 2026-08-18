@@ -27,10 +27,12 @@ export async function GET(req: NextRequest) {
 
 const criarSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
-  rg: z.string().optional(),
   cpf: z.string().optional(),
   cargo: z.string().optional(),
   condominioId: z.string().optional(),
+  vinculoTipo: z.enum(["ADMINISTRADORA", "ASSOCIACAO_CONDOMINIO"]),
+  tipoPessoa: z.enum(["PESSOA_FISICA", "PESSOA_JURIDICA"]),
+  cnpj: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {

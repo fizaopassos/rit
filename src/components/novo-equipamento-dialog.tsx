@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { IdCard, Receipt, Network, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/money-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -22,6 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type Modelo = {
   id: string;
@@ -36,12 +43,16 @@ const PROPRIETARIO_LABEL: Record<string, string> = {
   ASSOCIACAO_CONDOMINIO: "Associação / Condomínio",
 };
 
-function SecaoTitulo({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+function TituloSecao({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 text-sm font-medium">
-      <Icon className="text-muted-foreground size-4" />
-      {children}
-    </div>
+    <span className="flex items-center gap-2.5">
+      <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-md">
+        <Icon className="size-3.5" />
+      </span>
+      <span className="font-heading text-foreground text-[15px] font-normal">
+        {children}
+      </span>
+    </span>
   );
 }
 
@@ -65,7 +76,6 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
   const [macAddress, setMacAddress] = useState("");
   const [numeroRamal, setNumeroRamal] = useState("");
 
-  const [itensInclusos, setItensInclusos] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
   useEffect(() => {
@@ -89,7 +99,6 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
     setIpLocal("");
     setMacAddress("");
     setNumeroRamal("");
-    setItensInclusos("");
     setObservacoes("");
   }
 
@@ -120,7 +129,6 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
           ipLocal: ipLocal || undefined,
           macAddress: macAddress || undefined,
           numeroRamal: numeroRamal || undefined,
-          itensInclusos: itensInclusos || undefined,
           observacoes: observacoes || undefined,
         }),
       });
@@ -155,117 +163,139 @@ export function NovoEquipamentoDialog({ onCriado }: { onCriado: () => void }) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-3">
-            <SecaoTitulo icon={IdCard}>Identificação</SecaoTitulo>
+        <form onSubmit={handleSubmit}>
+          <Accordion defaultValue={["identificacao"]}>
+            <AccordionItem value="identificacao">
+              <AccordionTrigger>
+                <TituloSecao icon={IdCard}>Identificação</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-3 pt-1">
+                <div className="space-y-2">
+                  <Label>Modelo</Label>
+                  <Select value={modeloId} onValueChange={(v) => setModeloId(v ?? undefined)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione o modelo...">
+                        {(valor: string | null) => {
+                          const m = modelos.find((x) => x.id === valor);
+                          return m ? `${m.marca.nome} ${m.nome}` : "Selecione o modelo...";
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modelos.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.marca.nome} {m.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label>Modelo</Label>
-              <Select value={modeloId} onValueChange={(v) => setModeloId(v ?? undefined)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o modelo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {modelos.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.marca.nome} {m.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="numeroSerie">Nº de série / service tag</Label>
+                  <Input id="numeroSerie" value={numeroSerie} onChange={(e) => setNumeroSerie(e.target.value)} />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="numeroSerie">Nº de série / service tag</Label>
-              <Input id="numeroSerie" value={numeroSerie} onChange={(e) => setNumeroSerie(e.target.value)} />
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Proprietário</Label>
+                    <Select value={proprietarioTipo} onValueChange={(v) => setProprietarioTipo(v ?? undefined)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione...">
+                          {(valor: string | null) => (valor ? PROPRIETARIO_LABEL[valor] : "Selecione...")}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(PROPRIETARIO_LABEL).map(([valor, label]) => (
+                          <SelectItem key={valor} value={valor}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Proprietário</Label>
-                <Select value={proprietarioTipo} onValueChange={(v) => setProprietarioTipo(v ?? undefined)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(PROPRIETARIO_LABEL).map(([valor, label]) => (
-                      <SelectItem key={valor} value={valor}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label>Condomínio</Label>
+                    <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione...">
+                            {(valor: string | null) => condominios.find((c) => c.id === valor)?.nome ?? "Selecione..."}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {condominios.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-              <div className="space-y-2">
-                <Label>Condomínio</Label>
-                <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {condominios.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+            <AccordionItem value="aquisicao">
+              <AccordionTrigger>
+                <TituloSecao icon={Receipt}>Aquisição</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-3 pt-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nfNumero">Nº da NF</Label>
+                    <Input id="nfNumero" value={notaFiscalNumero} onChange={(e) => setNotaFiscalNumero(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nfValor">Valor (R$)</Label>
+                    <MoneyInput id="nfValor" value={notaFiscalValor} onChange={setNotaFiscalValor} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nfData">Data da NF</Label>
+                    <Input id="nfData" type="date" value={notaFiscalData} onChange={(e) => setNotaFiscalData(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dataAquisicao">Data de aquisição</Label>
+                    <Input id="dataAquisicao" type="date" value={dataAquisicao} onChange={(e) => setDataAquisicao(e.target.value)} />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="space-y-3 border-t pt-5">
-            <SecaoTitulo icon={Receipt}>Aquisição</SecaoTitulo>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="nfNumero">Nº da NF</Label>
-                <Input id="nfNumero" value={notaFiscalNumero} onChange={(e) => setNotaFiscalNumero(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nfValor">Valor (R$)</Label>
-                <Input id="nfValor" type="number" step="0.01" value={notaFiscalValor} onChange={(e) => setNotaFiscalValor(e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="nfData">Data da NF</Label>
-                <Input id="nfData" type="date" value={notaFiscalData} onChange={(e) => setNotaFiscalData(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dataAquisicao">Data de aquisição</Label>
-                <Input id="dataAquisicao" type="date" value={dataAquisicao} onChange={(e) => setDataAquisicao(e.target.value)} />
-              </div>
-            </div>
-          </div>
+            <AccordionItem value="rede">
+              <AccordionTrigger>
+                <TituloSecao icon={Network}>Rede (opcional)</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="pt-1">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="ip">IP local</Label>
+                    <Input id="ip" value={ipLocal} onChange={(e) => setIpLocal(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mac">MAC</Label>
+                    <Input id="mac" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ramal">Ramal</Label>
+                    <Input id="ramal" value={numeroRamal} onChange={(e) => setNumeroRamal(e.target.value)} />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="space-y-3 border-t pt-5">
-            <SecaoTitulo icon={Network}>Rede (opcional)</SecaoTitulo>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="ip">IP local</Label>
-                <Input id="ip" value={ipLocal} onChange={(e) => setIpLocal(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mac">MAC</Label>
-                <Input id="mac" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ramal">Ramal</Label>
-                <Input id="ramal" value={numeroRamal} onChange={(e) => setNumeroRamal(e.target.value)} />
-              </div>
-            </div>
-          </div>
+            <AccordionItem value="adicionais">
+              <AccordionTrigger>
+                <TituloSecao icon={FileText}>Informações adicionais</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="pt-1">
+                <div className="space-y-2">
+                  <Label htmlFor="obs">Observações</Label>
+                  <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
-          <div className="space-y-3 border-t pt-5">
-            <SecaoTitulo icon={FileText}>Informações adicionais</SecaoTitulo>
-            <div className="space-y-2">
-              <Label htmlFor="itens">Itens inclusos</Label>
-              <Input id="itens" value={itensInclusos} onChange={(e) => setItensInclusos(e.target.value)} placeholder="Fonte carregadora, Cabo USB-C, Capa protetora" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="obs">Observações</Label>
-              <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
-            </div>
-          </div>
-
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button type="submit" disabled={enviando}>
               {enviando ? "Salvando..." : "Salvar"}
             </Button>

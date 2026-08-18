@@ -98,7 +98,9 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
             <Label>Tipo</Label>
             <Select value={tipo} onValueChange={(v) => v && setTipo(v as typeof tipo)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(valor: string | null) => (valor === "generico" ? "Genérico de condomínio" : "Pessoal")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pessoal">Pessoal</SelectItem>
@@ -112,7 +114,9 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
               <Label>Condomínio</Label>
               <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue placeholder="Selecione...">
+                    {(valor: string | null) => condominios.find((c) => c.id === valor)?.nome ?? "Selecione..."}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {condominios.map((c) => (
@@ -127,7 +131,9 @@ export function NovoEmailDialog({ onCriado }: { onCriado: () => void }) {
             <Label>{tipo === "generico" ? "Quem responde hoje (opcional)" : "Colaborador"}</Label>
             <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione..." />
+                <SelectValue placeholder="Selecione...">
+                  {(valor: string | null) => colaboradores.find((c) => c.id === valor)?.nome ?? "Selecione..."}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {colaboradores.map((c) => (

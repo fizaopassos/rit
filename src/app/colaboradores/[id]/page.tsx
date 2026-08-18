@@ -32,10 +32,12 @@ type EquipamentoVinculado = {
 type Colaborador = {
   id: string;
   nome: string;
-  rg: string | null;
   cargo: string | null;
   status: string;
   cpfMascarado: string | null;
+  vinculoTipo: string;
+  tipoPessoa: string;
+  cnpj: string | null;
   condominioId: string | null;
   condominio: { nome: string } | null;
   alocacoes: EquipamentoVinculado[];

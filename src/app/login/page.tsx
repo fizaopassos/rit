@@ -51,18 +51,20 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="items-center text-center">
-          <Image
-            src="/logo.png"
-            alt="Retha"
-            width={160}
-            height={160}
-            className="mb-2 h-16 w-auto"
-            priority
-          />
-          <CardDescription>
-            Entre com sua conta de TI para acessar o controle de ativos.
-          </CardDescription>
+        <CardHeader>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Image
+              src="/logo.png"
+              alt="Retha"
+              width={320}
+              height={320}
+              className="h-28 w-auto"
+              priority
+            />
+            <CardDescription>
+              Entre com sua conta de TI para acessar o controle de ativos.
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -97,9 +97,11 @@ export function EditarUsuarioDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Perfil</Label>
-              <Select value={perfil} onValueChange={(v) => v && setPerfil(v)}>
+                            <Select value={perfil} onValueChange={(v) => v && setPerfil(v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(valor: string | null) => (valor === "CONSULTA" ? "Consulta" : "Admin")}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ADMIN">Admin</SelectItem>
@@ -109,9 +111,11 @@ export function EditarUsuarioDialog({
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={ativo} onValueChange={(v) => v && setAtivo(v)}>
+                            <Select value={ativo} onValueChange={(v) => v && setAtivo(v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(valor: string | null) => (valor === "false" ? "Inativo" : "Ativo")}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="true">Ativo</SelectItem>

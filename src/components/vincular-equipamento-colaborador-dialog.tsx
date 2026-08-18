@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 type Equipamento = {
   id: string;
@@ -38,6 +39,7 @@ export function VincularEquipamentoColaboradorDialog({
   const [open, setOpen] = useState(false);
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
   const [equipamentoId, setEquipamentoId] = useState<string>();
+  const [itensEntrega, setItensEntrega] = useState("");
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function VincularEquipamentoColaboradorDialog({
       const res = await fetch(`/api/equipamentos/${equipamentoId}/vincular`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ colaboradorId }),
+        body: JSON.stringify({ colaboradorId, itensEntrega: itensEntrega || undefined }),
       });
       const data = await res.json();
 
@@ -72,6 +74,7 @@ export function VincularEquipamentoColaboradorDialog({
 
       toast.success("Equipamento vinculado");
       setEquipamentoId(undefined);
+      setItensEntrega("");
       setOpen(false);
       onVinculado();
     } catch {
@@ -98,7 +101,12 @@ export function VincularEquipamentoColaboradorDialog({
             <Label>Equipamento</Label>
             <Select value={equipamentoId} onValueChange={(v) => setEquipamentoId(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione..." />
+                <SelectValue placeholder="Selecione...">
+                  {(valor: string | null) => {
+                    const eq = equipamentos.find((e) => e.id === valor);
+                    return eq ? `${eq.numeroPatrimonio} — ${eq.modelo.marca.nome} ${eq.modelo.nome}` : "Selecione...";
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {equipamentos.map((eq) => (
@@ -108,6 +116,16 @@ export function VincularEquipamentoColaboradorDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="itensEntrega">Itens inclusos na entrega (opcional)</Label>
+            <Input
+              id="itensEntrega"
+              value={itensEntrega}
+              onChange={(e) => setItensEntrega(e.target.value)}
+              placeholder="Fonte carregadora, Cabo USB-C, Capa protetora"
+            />
           </div>
 
           <DialogFooter>

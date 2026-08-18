@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ export function DevolverEmLoteDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [motivo, setMotivo] = useState<string>();
+  const [itensDevolucao, setItensDevolucao] = useState("");
   const [enviando, setEnviando] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -53,7 +55,11 @@ export function DevolverEmLoteDialog({
       const res = await fetch(`/api/colaboradores/${colaboradorId}/devolver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ equipamentoIds, motivoDevolucao: motivo }),
+        body: JSON.stringify({
+          equipamentoIds,
+          motivoDevolucao: motivo,
+          itensDevolucao: itensDevolucao || undefined,
+        }),
       });
       const data = await res.json();
 
@@ -63,10 +69,10 @@ export function DevolverEmLoteDialog({
       }
 
       toast.success(`${data.alocacaoIds.length} equipamento(s) devolvido(s)`);
-      // Abre o checklist já com todos os itens devolvidos juntos
       window.open(`/api/alocacoes/checklist-lote?ids=${data.alocacaoIds.join(",")}`, "_blank");
 
       setMotivo(undefined);
+      setItensDevolucao("");
       setOpen(false);
       onDevolvido();
     } catch {
@@ -91,7 +97,8 @@ export function DevolverEmLoteDialog({
           <DialogTitle>Registrar devolução</DialogTitle>
           <DialogDescription>
             {equipamentoIds.length} equipamento(s) selecionado(s) — todos vão
-            para o mesmo checklist de devolução, com o mesmo motivo.
+            para o mesmo checklist de devolução, com o mesmo motivo e os
+            mesmos itens.
           </DialogDescription>
         </DialogHeader>
 
@@ -100,7 +107,9 @@ export function DevolverEmLoteDialog({
             <Label>Motivo</Label>
             <Select value={motivo} onValueChange={(v) => setMotivo(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione..." />
+                <SelectValue placeholder="Selecione...">
+                  {(valor: string | null) => (valor ? MOTIVO_LABEL[valor] : "Selecione...")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(MOTIVO_LABEL).map(([valor, label]) => (
@@ -108,6 +117,16 @@ export function DevolverEmLoteDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="itensDevolucao">Itens inclusos na devolução (opcional)</Label>
+            <Input
+              id="itensDevolucao"
+              value={itensDevolucao}
+              onChange={(e) => setItensDevolucao(e.target.value)}
+              placeholder="Fonte carregadora, Cabo USB-C, Capa protetora"
+            />
           </div>
 
           <DialogFooter>

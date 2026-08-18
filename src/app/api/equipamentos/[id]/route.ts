@@ -38,7 +38,6 @@ const schema = z.object({
   ipLocal: z.string().optional(),
   macAddress: z.string().optional(),
   numeroRamal: z.string().optional(),
-  itensInclusos: z.string().optional(),
   observacoes: z.string().optional(),
 });
 

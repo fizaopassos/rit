@@ -132,7 +132,9 @@ export function NovaLinhaDialog({ onCriada }: { onCriada: () => void }) {
             <Label>Colaborador responsável (opcional)</Label>
             <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sem vínculo por enquanto" />
+                  <SelectValue placeholder="Sem vínculo por enquanto">
+                    {(valor: string | null) => colaboradores.find((c) => c.id === valor)?.nome ?? "Sem vínculo por enquanto"}
+                  </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {colaboradores.map((c) => (

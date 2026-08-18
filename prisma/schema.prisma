@@ -93,6 +93,11 @@ enum StatusColaborador {
   INATIVO
 }
 
+enum TipoPessoa {
+  PESSOA_FISICA
+  PESSOA_JURIDICA
+}
+
 // Perfis de acesso ao sistema (login), distintos do Colaborador (quem recebe equipamento)
 enum PerfilAcesso {
   ADMIN
@@ -150,11 +155,11 @@ model Condominio {
 model Colaborador {
   id           String            @id @default(cuid())
   nome         String
-  rg           String?
-  // CPF: armazenado cifrado (pgcrypto / criptografia de aplicação) — nunca em texto puro.
-  // O campo guarda o valor já cifrado; a máscara/exibição condicional acontece na camada de API.
+tipoPessoa   TipoPessoa        @default(PESSOA_FISICA)
   cpfCifrado   Bytes?
+  cnpj         String?
   cargo        String?
+  vinculoTipo  ProprietarioTipo  @default(ADMINISTRADORA)
   condominioId String?
   condominio   Condominio?       @relation(fields: [condominioId], references: [id])
   status       StatusColaborador @default(ATIVO)
@@ -201,7 +206,6 @@ model Equipamento {
   macAddress       String?
   numeroRamal      String?
 
-  itensInclusos    String?           // lista livre (fonte, mochila, capa, película etc.)
   observacoes      String?
 
   // Baixa
@@ -241,6 +245,8 @@ model Alocacao {
   dataInicio      DateTime         @default(now())
   dataFim         DateTime?
   motivoDevolucao MotivoDevolucao?
+  itensEntrega    String?          // preenchido ao vincular — aparece no comodato
+  itensDevolucao  String?          // preenchido ao devolver — aparece no checklist
 
   anexos          Anexo[]
 

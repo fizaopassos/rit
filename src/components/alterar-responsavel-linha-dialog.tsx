@@ -89,9 +89,11 @@ useEffect(() => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Colaborador</Label>
-            <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
+                        <Select value={colaboradorId} onValueChange={(v) => setColaboradorId(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sem vínculo" />
+                <SelectValue placeholder="Sem vínculo">
+                  {(valor: string | null) => colaboradores.find((c) => c.id === valor)?.nome ?? "Sem vínculo"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {colaboradores.map((c) => (

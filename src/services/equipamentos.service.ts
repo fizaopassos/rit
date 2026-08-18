@@ -56,7 +56,6 @@ export async function criarEquipamento(dados: {
   ipLocal?: string;
   macAddress?: string;
   numeroRamal?: string;
-  itensInclusos?: string;
   observacoes?: string;
 }) {
   const numeroPatrimonio = await gerarNumeroPatrimonio(
@@ -79,7 +78,6 @@ export async function criarEquipamento(dados: {
       ipLocal: dados.ipLocal,
       macAddress: dados.macAddress,
       numeroRamal: dados.numeroRamal,
-      itensInclusos: dados.itensInclusos,
       observacoes: dados.observacoes,
     },
     include: { modelo: { include: { marca: true } }, condominio: true },
@@ -101,7 +99,6 @@ export async function atualizarEquipamento(
     ipLocal?: string;
     macAddress?: string;
     numeroRamal?: string;
-    itensInclusos?: string;
     observacoes?: string;
   },
 ) {
@@ -118,7 +115,6 @@ export async function atualizarEquipamento(
       ipLocal: dados.ipLocal,
       macAddress: dados.macAddress,
       numeroRamal: dados.numeroRamal,
-      itensInclusos: dados.itensInclusos,
       observacoes: dados.observacoes,
     },
   });

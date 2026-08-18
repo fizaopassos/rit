@@ -24,6 +24,11 @@ import {
 
 type Condominio = { id: string; nome: string };
 
+const VINCULO_LABEL: Record<string, string> = {
+  ADMINISTRADORA: "Administradora (Retha)",
+  ASSOCIACAO_CONDOMINIO: "Associação / Condomínio",
+};
+
 export function EditarColaboradorDialog({
   colaboradorId,
   dadosAtuais,
@@ -32,8 +37,10 @@ export function EditarColaboradorDialog({
   colaboradorId: string;
   dadosAtuais: {
     nome: string;
-    rg: string | null;
     cargo: string | null;
+    tipoPessoa: string;
+    cnpj: string | null;
+    vinculoTipo: string;
     condominioId: string | null;
     status: string;
   };
@@ -42,12 +49,16 @@ export function EditarColaboradorDialog({
   const [open, setOpen] = useState(false);
   const [condominios, setCondominios] = useState<Condominio[]>([]);
   const [nome, setNome] = useState(dadosAtuais.nome);
-  const [rg, setRg] = useState(dadosAtuais.rg ?? "");
+  const [tipoPessoa, setTipoPessoa] = useState(dadosAtuais.tipoPessoa);
+  const [cnpj, setCnpj] = useState(dadosAtuais.cnpj ?? "");
   const [cargo, setCargo] = useState(dadosAtuais.cargo ?? "");
+  const [vinculoTipo, setVinculoTipo] = useState(dadosAtuais.vinculoTipo);
   const [condominioId, setCondominioId] = useState<string | undefined>();
   const [status, setStatus] = useState(dadosAtuais.status);
   const [cpf, setCpf] = useState("");
   const [enviando, setEnviando] = useState(false);
+
+  const isPj = tipoPessoa === "PESSOA_JURIDICA";
 
   useEffect(() => {
     if (open) {
@@ -70,11 +81,13 @@ export function EditarColaboradorDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome,
-          rg: rg || undefined,
+          tipoPessoa,
+          cnpj: isPj ? cnpj || undefined : undefined,
           cargo: cargo || undefined,
+          vinculoTipo,
           condominioId,
           status,
-          cpf: cpf || undefined,
+          cpf: isPj ? undefined : cpf || undefined,
         }),
       });
       const data = await res.json();
@@ -110,20 +123,36 @@ export function EditarColaboradorDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nome">Nome</Label>
+            <Label>Tipo</Label>
+                        <Select value={tipoPessoa} onValueChange={(v) => v && setTipoPessoa(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(valor: string | null) => (valor === "PESSOA_JURIDICA" ? "Pessoa Jurídica (PJ)" : "Pessoa Física")}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PESSOA_FISICA">Pessoa Física</SelectItem>
+                <SelectItem value="PESSOA_JURIDICA">Pessoa Jurídica (PJ)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nome">{isPj ? "Razão Social" : "Nome"}</Label>
             <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {isPj ? (
             <div className="space-y-2">
-              <Label htmlFor="rg">RG</Label>
-              <Input id="rg" value={rg} onChange={(e) => setRg(e.target.value)} />
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <Input id="cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
             </div>
+          ) : (
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF (deixe em branco para manter)</Label>
               <Input id="cpf" value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
             </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="cargo">Cargo</Label>
@@ -132,10 +161,27 @@ export function EditarColaboradorDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Condomínio / setor</Label>
-              <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
+              <Label>Vínculo</Label>
+                            <Select value={vinculoTipo} onValueChange={(v) => v && setVinculoTipo(v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione..." />
+                  <SelectValue>
+                    {(valor: string | null) => (valor ? VINCULO_LABEL[valor] : "")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(VINCULO_LABEL).map(([valor, label]) => (
+                    <SelectItem key={valor} value={valor}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Local de trabalho</Label>
+                            <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione...">
+                    {(valor: string | null) => condominios.find((c) => c.id === valor)?.nome ?? "Selecione..."}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {condominios.map((c) => (
@@ -144,18 +190,21 @@ export function EditarColaboradorDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => v && setStatus(v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ATIVO">Ativo</SelectItem>
-                  <SelectItem value="INATIVO">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+
+                    <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => v && setStatus(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(valor: string | null) => (valor === "INATIVO" ? "Inativo" : "Ativo")}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ATIVO">Ativo</SelectItem>
+                <SelectItem value="INATIVO">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>

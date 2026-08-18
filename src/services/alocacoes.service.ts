@@ -20,6 +20,7 @@ export async function buscarEquipamento(id: string) {
 export async function vincularEquipamento(
   equipamentoId: string,
   colaboradorId: string,
+  itensEntrega?: string,
 ) {
   const equipamento = await prisma.equipamento.findUniqueOrThrow({
     where: { id: equipamentoId },
@@ -36,6 +37,7 @@ export async function vincularEquipamento(
         colaboradorId,
         tipo: "COMODATO",
         dataInicio: new Date(),
+        itensEntrega,
       },
     }),
     prisma.equipamento.update({
@@ -48,6 +50,7 @@ export async function vincularEquipamento(
 export async function devolverEquipamento(
   equipamentoId: string,
   motivoDevolucao: MotivoDevolucao,
+  itensDevolucao?: string,
 ) {
   const alocacaoAberta = await prisma.alocacao.findFirst({
     where: { equipamentoId, dataFim: null },
@@ -60,7 +63,7 @@ export async function devolverEquipamento(
   return prisma.$transaction([
     prisma.alocacao.update({
       where: { id: alocacaoAberta.id },
-      data: { dataFim: new Date(), motivoDevolucao },
+      data: { dataFim: new Date(), motivoDevolucao, itensDevolucao },
     }),
     prisma.equipamento.update({
       where: { id: equipamentoId },
@@ -70,12 +73,13 @@ export async function devolverEquipamento(
 }
 
 // Devolução em lote — fecha várias alocações do mesmo colaborador de uma
-// vez (mesmo motivo pra todas) e devolve os IDs fechados, usados depois
-// para gerar um único PDF de checklist com todos os itens.
+// vez (mesmo motivo e mesmos itens devolvidos pra todas) e devolve os IDs
+// fechados, usados depois para gerar um único PDF de checklist.
 export async function devolverEquipamentosEmLote(
   colaboradorId: string,
   equipamentoIds: string[],
   motivoDevolucao: MotivoDevolucao,
+  itensDevolucao?: string,
 ) {
   const alocacoesAbertas = await prisma.alocacao.findMany({
     where: { colaboradorId, equipamentoId: { in: equipamentoIds }, dataFim: null },
@@ -92,7 +96,7 @@ export async function devolverEquipamentosEmLote(
   await prisma.$transaction([
     prisma.alocacao.updateMany({
       where: { id: { in: alocacaoIds } },
-      data: { dataFim: agora, motivoDevolucao },
+      data: { dataFim: agora, motivoDevolucao, itensDevolucao },
     }),
     prisma.equipamento.updateMany({
       where: { id: { in: equipIds } },

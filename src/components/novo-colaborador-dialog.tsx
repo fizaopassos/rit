@@ -24,18 +24,25 @@ import {
 
 type Condominio = { id: string; nome: string };
 
+const VINCULO_LABEL: Record<string, string> = {
+  ADMINISTRADORA: "Administradora (Retha)",
+  ASSOCIACAO_CONDOMINIO: "Associação / Condomínio",
+};
+
 export function NovoColaboradorDialog({ onCriado }: { onCriado: () => void }) {
   const [open, setOpen] = useState(false);
   const [condominios, setCondominios] = useState<Condominio[]>([]);
   const [nome, setNome] = useState("");
-  const [rg, setRg] = useState("");
+  const [tipoPessoa, setTipoPessoa] = useState("PESSOA_FISICA");
   const [cpf, setCpf] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [cargo, setCargo] = useState("");
+  const [vinculoTipo, setVinculoTipo] = useState("ADMINISTRADORA");
   const [condominioId, setCondominioId] = useState<string | undefined>();
   const [enviando, setEnviando] = useState(false);
 
-  // Carrega a lista de condomínios só quando o modal abre — evita
-  // uma requisição desnecessária toda vez que a página de colaboradores carrega
+  const isPj = tipoPessoa === "PESSOA_JURIDICA";
+
   useEffect(() => {
     if (open) {
       fetch("/api/condominios")
@@ -55,9 +62,11 @@ export function NovoColaboradorDialog({ onCriado }: { onCriado: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome,
-          rg: rg || undefined,
-          cpf: cpf || undefined,
+          tipoPessoa,
+          cpf: isPj ? undefined : cpf || undefined,
+          cnpj: isPj ? cnpj || undefined : undefined,
           cargo: cargo || undefined,
+          vinculoTipo,
           condominioId,
         }),
       });
@@ -70,9 +79,11 @@ export function NovoColaboradorDialog({ onCriado }: { onCriado: () => void }) {
 
       toast.success(`Colaborador "${data.nome}" criado`);
       setNome("");
-      setRg("");
+      setTipoPessoa("PESSOA_FISICA");
       setCpf("");
+      setCnpj("");
       setCargo("");
+      setVinculoTipo("ADMINISTRADORA");
       setCondominioId(undefined);
       setOpen(false);
       onCriado();
@@ -91,50 +102,83 @@ export function NovoColaboradorDialog({ onCriado }: { onCriado: () => void }) {
         <DialogHeader>
           <DialogTitle>Novo colaborador</DialogTitle>
           <DialogDescription>
-            O CPF é criptografado e nunca exibido por completo, exceto para o
-            perfil Admin — cada visualização fica registrada em log.
+            Pessoa Jurídica (PJ) aparece nos documentos como "Prestador",
+            usando CNPJ no lugar de CPF.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nome">Nome</Label>
+            <Label>Tipo</Label>
+            <Select value={tipoPessoa} onValueChange={(v) => v && setTipoPessoa(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(valor: string | null) => (valor === "PESSOA_JURIDICA" ? "Pessoa Jurídica (PJ)" : "Pessoa Física")}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PESSOA_FISICA">Pessoa Física</SelectItem>
+                <SelectItem value="PESSOA_JURIDICA">Pessoa Jurídica (PJ)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nome">{isPj ? "Razão Social" : "Nome"}</Label>
             <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required autoFocus />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {isPj ? (
             <div className="space-y-2">
-              <Label htmlFor="rg">RG</Label>
-              <Input id="rg" value={rg} onChange={(e) => setRg(e.target.value)} />
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <Input id="cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
             </div>
+          ) : (
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF</Label>
               <Input id="cpf" value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
             </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="cargo">Cargo</Label>
             <Input id="cargo" value={cargo} onChange={(e) => setCargo(e.target.value)} />
           </div>
 
-          <div className="space-y-2">
-            <Label>Condomínio / setor</Label>
-            <Select
-  value={condominioId}
-  onValueChange={(value) => setCondominioId(value ?? undefined)}
->
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {condominios.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Vínculo</Label>
+              <Select value={vinculoTipo} onValueChange={(v) => v && setVinculoTipo(v)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {(valor: string | null) => (valor ? VINCULO_LABEL[valor] : "")}
+                    </SelectValue>
+                  </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(VINCULO_LABEL).map(([valor, label]) => (
+                    <SelectItem key={valor} value={valor}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Local de trabalho (opcional)</Label>
+              <Select value={condominioId} onValueChange={(v) => setCondominioId(v ?? undefined)}>
+                <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione...">
+                      {(valor: string | null) => condominios.find((c) => c.id === valor)?.nome ?? "Selecione..."}
+                    </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {condominios.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <DialogFooter>

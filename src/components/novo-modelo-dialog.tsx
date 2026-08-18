@@ -102,7 +102,9 @@ export function NovoModeloDialog({ onCriado }: { onCriado: () => void }) {
             <Label>Marca</Label>
             <Select value={marcaId} onValueChange={(v) => setMarcaId(v ?? undefined)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione a marca..." />
+                <SelectValue placeholder="Selecione...">
+                  {(valor: string | null) => marcas.find((m) => m.id === valor)?.nome ?? "Selecione..."}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {marcas.map((m) => (

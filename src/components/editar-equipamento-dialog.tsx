@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { IdCard, Receipt, Network, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/money-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -21,8 +23,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type Modelo = { id: string; nome: string; tipoEquipamento: string; marca: { nome: string } };
+
+function TituloSecao({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-2 text-sm font-medium">
+      <Icon className="text-muted-foreground size-4" />
+      {children}
+    </span>
+  );
+}
 
 export function EditarEquipamentoDialog({
   equipamentoId,
@@ -39,7 +56,6 @@ export function EditarEquipamentoDialog({
     ipLocal: string | null;
     macAddress: string | null;
     numeroRamal: string | null;
-    itensInclusos: string | null;
     observacoes: string | null;
   };
   onEditado: () => void;
@@ -54,7 +70,6 @@ export function EditarEquipamentoDialog({
   const [ipLocal, setIpLocal] = useState(dadosAtuais.ipLocal ?? "");
   const [macAddress, setMacAddress] = useState(dadosAtuais.macAddress ?? "");
   const [numeroRamal, setNumeroRamal] = useState(dadosAtuais.numeroRamal ?? "");
-  const [itensInclusos, setItensInclusos] = useState(dadosAtuais.itensInclusos ?? "");
   const [observacoes, setObservacoes] = useState(dadosAtuais.observacoes ?? "");
   const [enviando, setEnviando] = useState(false);
 
@@ -93,7 +108,6 @@ export function EditarEquipamentoDialog({
           ipLocal: ipLocal || undefined,
           macAddress: macAddress || undefined,
           numeroRamal: numeroRamal || undefined,
-          itensInclusos: itensInclusos || undefined,
           observacoes: observacoes || undefined,
         }),
       });
@@ -127,68 +141,96 @@ export function EditarEquipamentoDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label>Modelo</Label>
-            <Select value={modeloId} onValueChange={(v) => v && setModeloId(v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {modelos.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>{m.marca.nome} {m.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <form onSubmit={handleSubmit}>
+          <Accordion defaultValue={["identificacao"]}>
+            <AccordionItem value="identificacao">
+              <AccordionTrigger>
+                <TituloSecao icon={IdCard}>Identificação</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-3 pt-1">
+                <div className="space-y-2">
+                  <Label>Modelo</Label>
+                  <Select value={modeloId} onValueChange={(v) => v && setModeloId(v)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue>
+                        {(valor: string | null) => {
+                          const m = modelos.find((x) => x.id === valor);
+                          return m ? `${m.marca.nome} ${m.nome}` : "";
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modelos.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.marca.nome} {m.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="numeroSerie">Nº de série / service tag</Label>
+                  <Input id="numeroSerie" value={numeroSerie} onChange={(e) => setNumeroSerie(e.target.value)} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="space-y-2">
-            <Label htmlFor="numeroSerie">Nº de série / service tag</Label>
-            <Input id="numeroSerie" value={numeroSerie} onChange={(e) => setNumeroSerie(e.target.value)} />
-          </div>
+            <AccordionItem value="aquisicao">
+              <AccordionTrigger>
+                <TituloSecao icon={Receipt}>Aquisição</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-3 pt-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nfNumero">Nº da NF</Label>
+                    <Input id="nfNumero" value={notaFiscalNumero} onChange={(e) => setNotaFiscalNumero(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nfValor">Valor (R$)</Label>
+                    <MoneyInput id="nfValor" value={notaFiscalValor} onChange={setNotaFiscalValor} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dataAquisicao">Data de aquisição</Label>
+                  <Input id="dataAquisicao" type="date" value={dataAquisicao} onChange={(e) => setDataAquisicao(e.target.value)} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="grid grid-cols-2 gap-3 border-t pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="nfNumero">Nº da NF</Label>
-              <Input id="nfNumero" value={notaFiscalNumero} onChange={(e) => setNotaFiscalNumero(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="nfValor">Valor (R$)</Label>
-              <Input id="nfValor" type="number" step="0.01" value={notaFiscalValor} onChange={(e) => setNotaFiscalValor(e.target.value)} />
-            </div>
-          </div>
+            <AccordionItem value="rede">
+              <AccordionTrigger>
+                <TituloSecao icon={Network}>Rede (opcional)</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="pt-1">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="ip">IP local</Label>
+                    <Input id="ip" value={ipLocal} onChange={(e) => setIpLocal(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mac">MAC</Label>
+                    <Input id="mac" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ramal">Ramal</Label>
+                    <Input id="ramal" value={numeroRamal} onChange={(e) => setNumeroRamal(e.target.value)} />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="space-y-2">
-            <Label htmlFor="dataAquisicao">Data de aquisição</Label>
-            <Input id="dataAquisicao" type="date" value={dataAquisicao} onChange={(e) => setDataAquisicao(e.target.value)} />
-          </div>
+            <AccordionItem value="adicionais">
+              <AccordionTrigger>
+                <TituloSecao icon={FileText}>Informações adicionais</TituloSecao>
+              </AccordionTrigger>
+              <AccordionContent className="pt-1">
+                <div className="space-y-2">
+                  <Label htmlFor="obs">Observações</Label>
+                  <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
-          <div className="grid grid-cols-3 gap-3 border-t pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="ip">IP local</Label>
-              <Input id="ip" value={ipLocal} onChange={(e) => setIpLocal(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="mac">MAC</Label>
-              <Input id="mac" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ramal">Ramal</Label>
-              <Input id="ramal" value={numeroRamal} onChange={(e) => setNumeroRamal(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="space-y-2 border-t pt-4">
-            <Label htmlFor="itens">Itens inclusos</Label>
-            <Input id="itens" value={itensInclusos} onChange={(e) => setItensInclusos(e.target.value)} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="obs">Observações</Label>
-            <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
-          </div>
-
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button type="submit" disabled={enviando}>
               {enviando ? "Salvando..." : "Salvar"}
             </Button>
