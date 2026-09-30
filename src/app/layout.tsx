@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
 className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} ${breeSerif.variable} h-full antialiased`}    >
       <body>
          <AppShell>{children}</AppShell>

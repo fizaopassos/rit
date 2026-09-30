@@ -16,7 +16,8 @@ export async function GET(
         "Content-Disposition": `inline; filename="checklist-${alocacaoId}.pdf"`,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error(`Falha ao gerar checklist da alocação ${alocacaoId}:`, err);
     return NextResponse.json({ erro: "Não foi possível gerar o checklist" }, { status: 500 });
   }
 }

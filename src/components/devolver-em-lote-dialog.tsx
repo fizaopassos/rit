@@ -21,13 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-
-const MOTIVO_LABEL: Record<string, string> = {
-  SAIDA_FUNCIONARIO: "Saída de funcionário da empresa",
-  TROCA_APARELHO: "Troca de aparelho",
-  FERIAS_LICENCA: "Férias ou licença",
-  OUTROS: "Outros",
-};
+import { MOTIVO_DEVOLUCAO_LABEL } from "@/lib/rotulos";
 
 export function DevolverEmLoteDialog({
   colaboradorId,
@@ -108,11 +102,11 @@ export function DevolverEmLoteDialog({
             <Select value={motivo} onValueChange={(v) => setMotivo(v ?? undefined)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione...">
-                  {(valor: string | null) => (valor ? MOTIVO_LABEL[valor] : "Selecione...")}
+                  {(valor: string | null) => (valor ? MOTIVO_DEVOLUCAO_LABEL[valor] : "Selecione...")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(MOTIVO_LABEL).map(([valor, label]) => (
+                {Object.entries(MOTIVO_DEVOLUCAO_LABEL).map(([valor, label]) => (
                   <SelectItem key={valor} value={valor}>{label}</SelectItem>
                 ))}
               </SelectContent>

@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
         "Content-Disposition": `inline; filename="checklist-lote.pdf"`,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("Falha ao gerar checklist em lote:", err);
     return NextResponse.json({ erro: "Não foi possível gerar o checklist" }, { status: 500 });
   }
 }

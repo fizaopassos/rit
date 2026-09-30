@@ -21,13 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PROPRIETARIO_LABEL } from "@/lib/rotulos";
 
 type Condominio = { id: string; nome: string };
-
-const VINCULO_LABEL: Record<string, string> = {
-  ADMINISTRADORA: "Administradora (Retha)",
-  ASSOCIACAO_CONDOMINIO: "Associação / Condomínio",
-};
 
 export function EditarColaboradorDialog({
   colaboradorId,
@@ -165,11 +161,11 @@ export function EditarColaboradorDialog({
                             <Select value={vinculoTipo} onValueChange={(v) => v && setVinculoTipo(v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue>
-                    {(valor: string | null) => (valor ? VINCULO_LABEL[valor] : "")}
+                    {(valor: string | null) => (valor ? PROPRIETARIO_LABEL[valor] : "")}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(VINCULO_LABEL).map(([valor, label]) => (
+                  {Object.entries(PROPRIETARIO_LABEL).map(([valor, label]) => (
                     <SelectItem key={valor} value={valor}>{label}</SelectItem>
                   ))}
                 </SelectContent>

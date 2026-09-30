@@ -21,16 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const MOTIVO_LABEL: Record<string, string> = {
-  FURTO_ROUBO: "Furto ou roubo",
-  PERDA: "Perda",
-  OBSOLESCENCIA: "Obsolescência",
-  DOACAO: "Doação",
-  VENDA: "Venda",
-  QUEBRA_IRREPARAVEL: "Quebra irreparável",
-  OUTRO: "Outro",
-};
+import { MOTIVO_BAIXA_LABEL } from "@/lib/rotulos";
 
 export function BaixarEquipamentoDialog({
   equipamentoId,
@@ -97,7 +88,7 @@ export function BaixarEquipamentoDialog({
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(MOTIVO_LABEL).map(([valor, label]) => (
+                {Object.entries(MOTIVO_BAIXA_LABEL).map(([valor, label]) => (
                   <SelectItem key={valor} value={valor}>{label}</SelectItem>
                 ))}
               </SelectContent>

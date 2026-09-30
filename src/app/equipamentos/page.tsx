@@ -26,6 +26,8 @@ import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { StatusBadge } from "@/components/status-badge";
 import { NovoEquipamentoDialog } from "@/components/novo-equipamento-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
+import { STATUS_EQUIPAMENTO_LABEL, STATUS_EQUIPAMENTO_TOM } from "@/lib/rotulos";
+import { buscarJson } from "@/lib/api";
 
 type Equipamento = {
   id: string;
@@ -39,20 +41,6 @@ type Equipamento = {
   responsavel: { id: string; nome: string } | null;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  EM_ESTOQUE: "Em estoque",
-  EM_USO: "Em uso",
-  EM_MANUTENCAO: "Em manutenção",
-  BAIXADO: "Baixado",
-};
-
-const STATUS_TOM: Record<string, "neutro" | "sucesso" | "aviso" | "perigo"> = {
-  EM_ESTOQUE: "neutro",
-  EM_USO: "sucesso",
-  EM_MANUTENCAO: "aviso",
-  BAIXADO: "perigo",
-};
-
 export default function EquipamentosPage() {
   const router = useRouter();
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([]);
@@ -64,8 +52,7 @@ export default function EquipamentosPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/equipamentos");
-      setEquipamentos(await res.json());
+      setEquipamentos(await buscarJson("/api/equipamentos"));
     } catch {
       toast.error("Não foi possível carregar os equipamentos");
     } finally {
@@ -139,7 +126,7 @@ export default function EquipamentosPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="TODOS">Todos os status</SelectItem>
-            {Object.entries(STATUS_LABEL).map(([valor, label]) => (
+            {Object.entries(STATUS_EQUIPAMENTO_LABEL).map(([valor, label]) => (
               <SelectItem key={valor} value={valor}>{label}</SelectItem>
             ))}
           </SelectContent>
@@ -202,7 +189,7 @@ export default function EquipamentosPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">{eq.condominio.nome}</TableCell>
                   <TableCell>
-                    <StatusBadge label={STATUS_LABEL[eq.status]} tom={STATUS_TOM[eq.status]} />
+                    <StatusBadge label={STATUS_EQUIPAMENTO_LABEL[eq.status]} tom={STATUS_EQUIPAMENTO_TOM[eq.status]} />
                   </TableCell>
                 </TableRow>
               ))}

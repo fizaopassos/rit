@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { NovoCondominioDialog } from "@/components/novo-condominio-dialog";
 import { EditarCondominioDialog } from "@/components/editar-condominio-dialog";
+import { buscarJson } from "@/lib/api";
 
 type Condominio = {
   id: string;
@@ -32,8 +33,7 @@ export default function CondominiosPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/condominios");
-      setCondominios(await res.json());
+      setCondominios(await buscarJson("/api/condominios"));
     } catch {
       toast.error("Não foi possível carregar os condomínios");
     } finally {

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { MOTIVO_DEVOLUCAO_LABEL } from "@/lib/rotulos";
 
 type AlocacaoComDados = {
   dataInicio: Date;
@@ -144,13 +145,6 @@ export function buildComodatoHtml(alocacao: AlocacaoComDados) {
   `;
 }
 
-const MOTIVO_LABEL: Record<string, string> = {
-  SAIDA_FUNCIONARIO: "Saída de funcionário da empresa",
-  TROCA_APARELHO: "Troca de aparelho",
-  FERIAS_LICENCA: "Férias ou licença",
-  OUTROS: "Outros",
-};
-
 export function buildChecklistHtml(alocacao: AlocacaoComDados) {
   const eq = alocacao.equipamento;
   const t = termosPessoa(alocacao.colaborador);
@@ -177,7 +171,7 @@ export function buildChecklistHtml(alocacao: AlocacaoComDados) {
       </table>
 
       <p><strong>3. Motivo da devolução</strong></p>
-      <p>${alocacao.motivoDevolucao ? MOTIVO_LABEL[alocacao.motivoDevolucao] : "—"}</p>
+      <p>${alocacao.motivoDevolucao ? MOTIVO_DEVOLUCAO_LABEL[alocacao.motivoDevolucao] : "—"}</p>
 
       <p><strong>4. Declaração</strong></p>
       <p>A Retha declara ter recebido os itens descritos no item 2 deste termo do ${t.tratamento} acima citado, ciente do motivo da devolução descrito no item 3.</p>
@@ -232,7 +226,7 @@ export function buildChecklistHtmlLote(alocacoes: AlocacaoComDados[]) {
       </table>
 
       <p><strong>3. Motivo da devolução</strong></p>
-      <p>${primeira.motivoDevolucao ? MOTIVO_LABEL[primeira.motivoDevolucao] : "—"}</p>
+      <p>${primeira.motivoDevolucao ? MOTIVO_DEVOLUCAO_LABEL[primeira.motivoDevolucao] : "—"}</p>
 
       <p><strong>4. Declaração</strong></p>
       <p>A Retha declara ter recebido os itens descritos no item 2 deste termo do ${t.tratamento} acima citado, ciente do motivo da devolução descrito no item 3.</p>

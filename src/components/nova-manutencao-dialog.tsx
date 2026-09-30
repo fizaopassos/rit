@@ -21,12 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const TIPO_LABEL: Record<string, string> = {
-  PREVENTIVA: "Preventiva",
-  CORRETIVA: "Corretiva",
-  TROCA_PECA: "Troca de peça",
-};
+import { TIPO_MANUTENCAO_LABEL } from "@/lib/rotulos";
 
 export function NovaManutencaoDialog({
   equipamentoId,
@@ -109,7 +104,7 @@ export function NovaManutencaoDialog({
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(TIPO_LABEL).map(([valor, label]) => (
+                  {Object.entries(TIPO_MANUTENCAO_LABEL).map(([valor, label]) => (
                     <SelectItem key={valor} value={valor}>{label}</SelectItem>
                   ))}
                 </SelectContent>

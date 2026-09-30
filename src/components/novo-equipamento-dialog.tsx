@@ -29,6 +29,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { PROPRIETARIO_LABEL } from "@/lib/rotulos";
 
 type Modelo = {
   id: string;
@@ -37,11 +38,6 @@ type Modelo = {
   marca: { nome: string };
 };
 type Condominio = { id: string; nome: string; codigo: string };
-
-const PROPRIETARIO_LABEL: Record<string, string> = {
-  ADMINISTRADORA: "Administradora (Retha)",
-  ASSOCIACAO_CONDOMINIO: "Associação / Condomínio",
-};
 
 function TituloSecao({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (

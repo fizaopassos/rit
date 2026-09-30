@@ -16,7 +16,8 @@ export async function GET(
         "Content-Disposition": `inline; filename="comodato-${alocacaoId}.pdf"`,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error(`Falha ao gerar comodato da alocação ${alocacaoId}:`, err);
     return NextResponse.json({ erro: "Não foi possível gerar o comodato" }, { status: 500 });
   }
 }

@@ -11,55 +11,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { BaixarEquipamentoDialog } from "@/components/baixar-equipamento-dialog";
+import { ReverterBaixaDialog } from "@/components/reverter-baixa-dialog";
 import { UploadAnexoDialog } from "@/components/upload-anexo-dialog";
 import { NovaManutencaoDialog } from "@/components/nova-manutencao-dialog";
 import { EditarEquipamentoDialog } from "@/components/editar-equipamento-dialog";
 import { StatusBadge } from "@/components/status-badge";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
-
-const STATUS_LABEL: Record<string, string> = {
-  EM_ESTOQUE: "Em estoque",
-  EM_USO: "Em uso",
-  EM_MANUTENCAO: "Em manutenção",
-  BAIXADO: "Baixado",
-};
-
-const STATUS_TOM: Record<string, "neutro" | "sucesso" | "aviso" | "perigo"> = {
-  EM_ESTOQUE: "neutro",
-  EM_USO: "sucesso",
-  EM_MANUTENCAO: "aviso",
-  BAIXADO: "perigo",
-};
-
-const MOTIVO_LABEL: Record<string, string> = {
-  SAIDA_FUNCIONARIO: "Saída de funcionário",
-  TROCA_APARELHO: "Troca de aparelho",
-  FERIAS_LICENCA: "Férias ou licença",
-  OUTROS: "Outros",
-};
-
-const MOTIVO_BAIXA_LABEL: Record<string, string> = {
-  FURTO_ROUBO: "Furto ou roubo",
-  PERDA: "Perda",
-  OBSOLESCENCIA: "Obsolescência",
-  DOACAO: "Doação",
-  VENDA: "Venda",
-  QUEBRA_IRREPARAVEL: "Quebra irreparável",
-  OUTRO: "Outro",
-};
-
-const TIPO_ANEXO_LABEL: Record<string, string> = {
-  NOTA_FISCAL: "Nota fiscal",
-  TERMO_COMODATO: "Termo de comodato",
-  CHECKLIST_DEVOLUCAO: "Checklist de devolução",
-  OUTRO: "Outro",
-};
-
-const TIPO_MANUTENCAO_LABEL: Record<string, string> = {
-  PREVENTIVA: "Preventiva",
-  CORRETIVA: "Corretiva",
-  TROCA_PECA: "Troca de peça",
-};
+import { MOTIVO_BAIXA_LABEL, MOTIVO_DEVOLUCAO_LABEL, STATUS_EQUIPAMENTO_LABEL, STATUS_EQUIPAMENTO_TOM, TIPO_ANEXO_LABEL, TIPO_MANUTENCAO_LABEL } from "@/lib/rotulos";
 
 function formatarMoeda(valor: string | null) {
   if (!valor) return "—";
@@ -191,7 +149,7 @@ export default function EquipamentoPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusBadge label={STATUS_LABEL[equipamento.status]} tom={STATUS_TOM[equipamento.status]} />
+          <StatusBadge label={STATUS_EQUIPAMENTO_LABEL[equipamento.status]} tom={STATUS_EQUIPAMENTO_TOM[equipamento.status]} />
           <EditarEquipamentoDialog equipamentoId={equipamento.id} dadosAtuais={equipamento} onEditado={carregar} />
         </div>
       </div>
@@ -250,15 +208,18 @@ export default function EquipamentoPage() {
           </div>
 
           {equipamento.status === "BAIXADO" && (
-            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
-              <p className="font-medium text-destructive">Equipamento baixado</p>
-              <p className="text-muted-foreground text-xs">
-                Motivo: {equipamento.motivoBaixa ? MOTIVO_BAIXA_LABEL[equipamento.motivoBaixa] : "—"}
-                {equipamento.dataBaixa && ` · ${new Date(equipamento.dataBaixa).toLocaleDateString("pt-BR")}`}
-              </p>
-              {equipamento.observacaoBaixa && (
-                <p className="text-muted-foreground text-xs">{equipamento.observacaoBaixa}</p>
-              )}
+            <div className="mt-4 flex items-start justify-between gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
+              <div>
+                <p className="font-medium text-destructive">Equipamento baixado</p>
+                <p className="text-muted-foreground text-xs">
+                  Motivo: {equipamento.motivoBaixa ? MOTIVO_BAIXA_LABEL[equipamento.motivoBaixa] : "—"}
+                  {equipamento.dataBaixa && ` · ${new Date(equipamento.dataBaixa).toLocaleDateString("pt-BR")}`}
+                </p>
+                {equipamento.observacaoBaixa && (
+                  <p className="text-muted-foreground text-xs">{equipamento.observacaoBaixa}</p>
+                )}
+              </div>
+              <ReverterBaixaDialog equipamentoId={equipamento.id} onRevertido={carregar} />
             </div>
           )}
         </TabsContent>
@@ -277,7 +238,7 @@ export default function EquipamentoPage() {
                     {new Date(a.dataInicio).toLocaleDateString("pt-BR")}
                     {" → "}
                     {a.dataFim ? new Date(a.dataFim).toLocaleDateString("pt-BR") : "atual"}
-                    {a.motivoDevolucao && ` · ${MOTIVO_LABEL[a.motivoDevolucao]}`}
+                    {a.motivoDevolucao && ` · ${MOTIVO_DEVOLUCAO_LABEL[a.motivoDevolucao]}`}
                   </p>
                 </li>
               ))}

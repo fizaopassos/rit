@@ -16,6 +16,7 @@ import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { StatusBadge } from "@/components/status-badge";
 import { NovoEmailDialog } from "@/components/novo-email-dialog";
 import { AlterarResponsavelEmailDialog } from "@/components/alterar-responsavel-email-dialog";
+import { buscarJson } from "@/lib/api";
 
 type EmailWorkspace = {
   id: string;
@@ -32,8 +33,7 @@ export default function EmailsPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/emails");
-      setEmails(await res.json());
+      setEmails(await buscarJson("/api/emails"));
     } catch {
       toast.error("Não foi possível carregar os emails");
     } finally {

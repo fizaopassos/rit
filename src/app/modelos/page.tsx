@@ -17,6 +17,7 @@ import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { NovoModeloDialog } from "@/components/novo-modelo-dialog";
 import { EditarModeloDialog } from "@/components/editar-modelo-dialog";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
+import { buscarJson } from "@/lib/api";
 
 type Modelo = {
   id: string;
@@ -36,8 +37,7 @@ export default function ModelosPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/modelos");
-      setModelos(await res.json());
+      setModelos(await buscarJson("/api/modelos"));
     } catch {
       toast.error("Não foi possível carregar os modelos");
     } finally {

@@ -17,6 +17,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { NovaLinhaDialog } from "@/components/nova-linha-dialog";
 import { AlterarResponsavelLinhaDialog } from "@/components/alterar-responsavel-linha-dialog";
 import { EditarLinhaDialog } from "@/components/editar-linha-dialog";
+import { STATUS_LINHA_LABEL } from "@/lib/rotulos";
+import { buscarJson } from "@/lib/api";
 
 type Linha = {
   id: string;
@@ -29,12 +31,6 @@ type Linha = {
   colaborador: { id: string; nome: string; status: string } | null;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  ATIVA: "Ativa",
-  CANCELADA: "Cancelada",
-  SEM_USO: "Sem uso",
-};
-
 export default function LinhasPage() {
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -42,8 +38,7 @@ export default function LinhasPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/linhas");
-      setLinhas(await res.json());
+      setLinhas(await buscarJson("/api/linhas"));
     } catch {
       toast.error("Não foi possível carregar as linhas");
     } finally {
@@ -127,7 +122,7 @@ export default function LinhasPage() {
                     </TableCell>
                     <TableCell>
                       <StatusBadge
-                        label={STATUS_LABEL[l.status]}
+                        label={STATUS_LINHA_LABEL[l.status]}
                         tom={alerta ? "perigo" : l.status === "ATIVA" ? "sucesso" : "neutro"}
                       />
                     </TableCell>

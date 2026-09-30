@@ -15,6 +15,8 @@ import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { StatusBadge } from "@/components/status-badge";
 import { NovoUsuarioDialog } from "@/components/novo-usuario-dialog";
 import { EditarUsuarioDialog } from "@/components/editar-usuario-dialog";
+import { PERFIL_LABEL } from "@/lib/rotulos";
+import { buscarJson } from "@/lib/api";
 
 type Usuario = {
   id: string;
@@ -24,11 +26,6 @@ type Usuario = {
   ativo: boolean;
 };
 
-const PERFIL_LABEL: Record<string, string> = {
-  ADMIN: "Admin",
-  CONSULTA: "Consulta",
-};
-
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -36,8 +33,7 @@ export default function UsuariosPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/usuarios");
-      setUsuarios(await res.json());
+      setUsuarios(await buscarJson("/api/usuarios"));
     } catch {
       toast.error("Não foi possível carregar os usuários");
     } finally {

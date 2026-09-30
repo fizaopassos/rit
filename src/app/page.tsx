@@ -27,6 +27,7 @@ import {
   Search,
 } from "lucide-react";
 import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
+import { buscarJson } from "@/lib/api";
 
 type Equipamento = {
   status: string;
@@ -108,11 +109,11 @@ export default function Home() {
   const carregar = useCallback(() => {
     setCarregando(true);
     return Promise.all([
-      fetch("/api/equipamentos").then((r) => r.json()),
-      fetch("/api/colaboradores").then((r) => r.json()),
-      fetch("/api/linhas").then((r) => r.json()),
-      fetch("/api/emails").then((r) => r.json()),
-      fetch("/api/condominios").then((r) => r.json()),
+      buscarJson<Equipamento[]>("/api/equipamentos"),
+      buscarJson<Colaborador[]>("/api/colaboradores"),
+      buscarJson<Linha[]>("/api/linhas"),
+      buscarJson<EmailWorkspace[]>("/api/emails"),
+      buscarJson<Condominio[]>("/api/condominios"),
     ])
       .then(([eq, col, lin, ema, cond]) => {
         setEquipamentos(eq);

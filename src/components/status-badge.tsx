@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type Tom = "neutro" | "sucesso" | "aviso" | "perigo";
+export type Tom = "neutro" | "sucesso" | "aviso" | "perigo";
 
 const TOM_CLASSES: Record<Tom, string> = {
   neutro: "bg-muted text-muted-foreground",

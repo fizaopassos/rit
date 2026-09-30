@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { NovaMarcaDialog } from "@/components/nova-marca-dialog";
 import { EditarMarcaDialog } from "@/components/editar-marca-dialog";
+import { buscarJson } from "@/lib/api";
 
 type Marca = {
   id: string;
@@ -31,8 +32,7 @@ export default function MarcasPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/marcas");
-      setMarcas(await res.json());
+      setMarcas(await buscarJson("/api/marcas"));
     } catch {
       toast.error("Não foi possível carregar as marcas");
     } finally {

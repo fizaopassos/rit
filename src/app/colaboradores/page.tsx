@@ -18,6 +18,7 @@ import { EmptyState, LoadingState } from "@/components/empty-loading-states";
 import { StatusBadge } from "@/components/status-badge";
 import { NovoColaboradorDialog } from "@/components/novo-colaborador-dialog";
 import { usePerfil } from "@/lib/use-perfil";
+import { buscarJson } from "@/lib/api";
 
 type Colaborador = {
   id: string;
@@ -42,8 +43,7 @@ export default function ColaboradoresPage() {
   const carregar = useCallback(async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/colaboradores");
-      setColaboradores(await res.json());
+      setColaboradores(await buscarJson("/api/colaboradores"));
     } catch {
       toast.error("Não foi possível carregar os colaboradores");
     } finally {
