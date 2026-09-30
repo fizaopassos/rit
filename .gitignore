@@ -42,3 +42,6 @@ next-env.d.ts
 
 /src/generated/prisma
 credenciais-gcs.json
+
+# configuração pessoal do Claude Code
+.claude/settings.local.json
