@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { MOTIVO_DEVOLUCAO_LABEL } from "@/lib/rotulos";
+import { TIPO_EQUIPAMENTO_LABEL, TipoEquipamentoValue } from "@/lib/tipos-equipamento";
 
 type AlocacaoComDados = {
   dataInicio: Date;
@@ -25,6 +26,18 @@ type AlocacaoComDados = {
     linha?: { numero: string; operadora: string | null; valorMensal: unknown } | null;
   };
 };
+
+// Tudo que vem do cadastro passa por aqui antes de entrar no HTML do PDF —
+// um nome com "<" ou "&" quebraria o documento (ou injetaria marcação).
+function esc(valor: string | null | undefined, vazio = "—") {
+  if (!valor) return vazio;
+  return valor
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function formatarData(data: Date) {
   return data.toLocaleDateString("pt-BR", {
@@ -91,12 +104,12 @@ export function buildComodatoHtml(alocacao: AlocacaoComDados) {
   const t = termosPessoa(alocacao.colaborador);
 
   const linhaTexto = eq.linha
-    ? `<li>Em caso de utilização de linha telefônica fornecida pelo empregador (${eq.linha.numero}, operadora ${eq.linha.operadora ?? "—"}, valor mensal ${formatarValor(eq.linha.valorMensal)}), os valores excedentes na fatura do mês vigente serão cobrados e descontados em folha de pagamento do ${t.tratamento}.</li>`
+    ? `<li>Em caso de utilização de linha telefônica fornecida pelo empregador (${esc(eq.linha.numero)}, operadora ${esc(eq.linha.operadora)}, valor mensal ${formatarValor(eq.linha.valorMensal)}), os valores excedentes na fatura do mês vigente serão cobrados e descontados em folha de pagamento do ${t.tratamento}.</li>`
     : "";
 
   const declaracaoInicial = t.pj
-    ? `A empresa ${alocacao.colaborador.nome}, ${t.rotuloDocumento} nº ${t.numeroDocumento}, doravante denominada PRESTADOR, declara ter recebido da Retha Imóveis Ltda. o equipamento descrito abaixo`
-    : `Eu, ${alocacao.colaborador.nome}, ${t.rotuloDocumento} nº ${t.numeroDocumento}, declaro ter recebido do empregador o equipamento descrito abaixo`;
+    ? `A empresa ${esc(alocacao.colaborador.nome)}, ${t.rotuloDocumento} nº ${esc(t.numeroDocumento)}, doravante denominada PRESTADOR, declara ter recebido da Retha Imóveis Ltda. o equipamento descrito abaixo`
+    : `Eu, ${esc(alocacao.colaborador.nome)}, ${t.rotuloDocumento} nº ${esc(t.numeroDocumento)}, declaro ter recebido do empregador o equipamento descrito abaixo`;
 
   return `
     <html><head>${ESTILO_BASE}</head><body>
@@ -128,11 +141,11 @@ export function buildComodatoHtml(alocacao: AlocacaoComDados) {
       <p><strong>c) Tempo de duração:</strong> o contrato terá validade durante todo o tempo ${t.pj ? "de vigência da prestação de serviço" : "empregatício do colaborador"}, enquanto houver necessidade de uso deste equipamento.</p>
 
       <div class="campos">
-        <p><strong>Número de série do equipamento:</strong> ${eq.numeroSerie ?? "—"}</p>
-        <p><strong>Marca/Modelo:</strong> ${eq.modelo.marca.nome} ${eq.modelo.nome}</p>
-        <p><strong>Nota fiscal:</strong> ${eq.notaFiscalNumero ?? "—"}</p>
+        <p><strong>Número de série do equipamento:</strong> ${esc(eq.numeroSerie)}</p>
+        <p><strong>Marca/Modelo:</strong> ${esc(eq.modelo.marca.nome)} ${esc(eq.modelo.nome)}</p>
+        <p><strong>Nota fiscal:</strong> ${esc(eq.notaFiscalNumero)}</p>
         <p><strong>Valor do equipamento:</strong> ${formatarValor(eq.notaFiscalValor)}</p>
-        <p><strong>Descrição de itens inclusos:</strong> ${alocacao.itensEntrega ?? "—"}</p>
+        <p><strong>Descrição de itens inclusos:</strong> ${esc(alocacao.itensEntrega)}</p>
       </div>
 
       <p style="margin-top:24px">Cotia, ${formatarData(alocacao.dataInicio)}.</p>
@@ -156,18 +169,18 @@ export function buildChecklistHtml(alocacao: AlocacaoComDados) {
 
       <p><strong>1. Informações do Colaborador/Prestador</strong></p>
       <table>
-        <tr><td><strong>${t.pj ? "Razão Social" : "Nome completo"}</strong></td><td>${alocacao.colaborador.nome}</td></tr>
-        <tr><td><strong>${t.rotuloDocumento}</strong></td><td>${t.numeroDocumento}</td></tr>
-        <tr><td><strong>Localidade</strong></td><td>${eq.condominio.nome}</td></tr>
-        <tr><td><strong>Setor</strong></td><td>${alocacao.colaborador.cargo ?? "—"}</td></tr>
+        <tr><td><strong>${t.pj ? "Razão Social" : "Nome completo"}</strong></td><td>${esc(alocacao.colaborador.nome)}</td></tr>
+        <tr><td><strong>${t.rotuloDocumento}</strong></td><td>${esc(t.numeroDocumento)}</td></tr>
+        <tr><td><strong>Localidade</strong></td><td>${esc(eq.condominio.nome)}</td></tr>
+        <tr><td><strong>Setor</strong></td><td>${esc(alocacao.colaborador.cargo)}</td></tr>
       </table>
 
       <p><strong>2. Descrição do(s) bem(ns) devolvido(s)</strong></p>
       <table>
-        <tr><td><strong>Item</strong></td><td>${eq.tipoEquipamento}</td></tr>
-        <tr><td><strong>Marca e modelo</strong></td><td>${eq.modelo.marca.nome} ${eq.modelo.nome}</td></tr>
-        <tr><td><strong>S/N</strong></td><td>${eq.numeroSerie ?? "—"}</td></tr>
-        <tr><td><strong>Itens inclusos</strong></td><td>${alocacao.itensDevolucao ?? "—"}</td></tr>
+        <tr><td><strong>Item</strong></td><td>${TIPO_EQUIPAMENTO_LABEL[eq.tipoEquipamento as TipoEquipamentoValue] ?? esc(eq.tipoEquipamento)}</td></tr>
+        <tr><td><strong>Marca e modelo</strong></td><td>${esc(eq.modelo.marca.nome)} ${esc(eq.modelo.nome)}</td></tr>
+        <tr><td><strong>S/N</strong></td><td>${esc(eq.numeroSerie)}</td></tr>
+        <tr><td><strong>Itens inclusos</strong></td><td>${esc(alocacao.itensDevolucao)}</td></tr>
       </table>
 
       <p><strong>3. Motivo da devolução</strong></p>
@@ -197,10 +210,10 @@ export function buildChecklistHtmlLote(alocacoes: AlocacaoComDados[]) {
       const eq = a.equipamento;
       return `
         <tr>
-          <td>${eq.tipoEquipamento}</td>
-          <td>${eq.modelo.marca.nome} ${eq.modelo.nome}</td>
-          <td>${eq.numeroSerie ?? "—"}</td>
-          <td>${a.itensDevolucao ?? "—"}</td>
+          <td>${TIPO_EQUIPAMENTO_LABEL[eq.tipoEquipamento as TipoEquipamentoValue] ?? esc(eq.tipoEquipamento)}</td>
+          <td>${esc(eq.modelo.marca.nome)} ${esc(eq.modelo.nome)}</td>
+          <td>${esc(eq.numeroSerie)}</td>
+          <td>${esc(a.itensDevolucao)}</td>
         </tr>
       `;
     })
@@ -213,10 +226,10 @@ export function buildChecklistHtmlLote(alocacoes: AlocacaoComDados[]) {
 
       <p><strong>1. Informações do Colaborador/Prestador</strong></p>
       <table>
-        <tr><td><strong>${t.pj ? "Razão Social" : "Nome completo"}</strong></td><td>${primeira.colaborador.nome}</td></tr>
-        <tr><td><strong>${t.rotuloDocumento}</strong></td><td>${t.numeroDocumento}</td></tr>
-        <tr><td><strong>Localidade</strong></td><td>${primeira.equipamento.condominio.nome}</td></tr>
-        <tr><td><strong>Setor</strong></td><td>${primeira.colaborador.cargo ?? "—"}</td></tr>
+        <tr><td><strong>${t.pj ? "Razão Social" : "Nome completo"}</strong></td><td>${esc(primeira.colaborador.nome)}</td></tr>
+        <tr><td><strong>${t.rotuloDocumento}</strong></td><td>${esc(t.numeroDocumento)}</td></tr>
+        <tr><td><strong>Localidade</strong></td><td>${esc(primeira.equipamento.condominio.nome)}</td></tr>
+        <tr><td><strong>Setor</strong></td><td>${esc(primeira.colaborador.cargo)}</td></tr>
       </table>
 
       <p><strong>2. Descrição do(s) bem(ns) devolvido(s)</strong></p>
