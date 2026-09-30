@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MenuMobile } from "@/components/app-sidebar";
 
 const LABEL_POR_SEGMENTO: Record<string, string> = {
   equipamentos: "Equipamentos",
@@ -64,7 +65,8 @@ export function SiteHeader() {
     : "?";
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-6">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sm:px-6">
+      <MenuMobile />
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -83,7 +85,7 @@ export function SiteHeader() {
                 <Avatar className="size-7">
                   <AvatarFallback className="text-xs">{iniciais}</AvatarFallback>
                 </Avatar>
-                <span className="text-muted-foreground">{nome ?? "..."}</span>
+                <span className="text-muted-foreground hidden sm:inline">{nome ?? "..."}</span>
               </button>
             }
           />

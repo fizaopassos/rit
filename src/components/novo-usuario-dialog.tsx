@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PERFIL_LABEL } from "@/lib/rotulos";
 
 export function NovoUsuarioDialog({ onCriado }: { onCriado: () => void }) {
   const [open, setOpen] = useState(false);
@@ -88,7 +89,7 @@ export function NovoUsuarioDialog({ onCriado }: { onCriado: () => void }) {
           </div>
           <div className="space-y-2">
             <Label>Perfil</Label>
-            <Select value={perfil} onValueChange={(v) => v && setPerfil(v)}>
+            <Select items={PERFIL_LABEL} value={perfil} onValueChange={(v) => v && setPerfil(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

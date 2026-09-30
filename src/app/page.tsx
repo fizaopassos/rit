@@ -186,14 +186,14 @@ export default function Home() {
   }, [equipamentosFiltrados]);
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="mx-auto max-w-5xl p-4 sm:p-8">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">RIT — Retha Ativos</h1>
           <p className="text-muted-foreground mt-1 text-sm">Controle de ativos de tecnologia.</p>
         </div>
         <Select value={condominioFiltro} onValueChange={(v) => v && setCondominioFiltro(v)}>
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-full sm:w-56">
             <SelectValue>
               {(valor: string | null) =>
                 valor === "TODOS" || !valor

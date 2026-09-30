@@ -119,11 +119,11 @@ export default function EquipamentoPage() {
   }, [carregar]);
 
   if (carregando) {
-    return <p className="text-muted-foreground p-8 text-sm">Carregando...</p>;
+    return <p className="text-muted-foreground p-4 text-sm sm:p-8">Carregando...</p>;
   }
 
   if (!equipamento) {
-    return <p className="text-muted-foreground p-8 text-sm">Equipamento não encontrado.</p>;
+    return <p className="text-muted-foreground p-4 text-sm sm:p-8">Equipamento não encontrado.</p>;
   }
 
   const alocacaoAtual = equipamento.alocacoes.find((a) => !a.dataFim);
@@ -133,8 +133,8 @@ export default function EquipamentoPage() {
     : null;
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-start justify-between">
+    <div className="mx-auto max-w-3xl p-4 sm:p-8">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <span className="font-mono text-muted-foreground text-xs">
             {equipamento.numeroPatrimonio}
@@ -154,7 +154,7 @@ export default function EquipamentoPage() {
         </div>
       </div>
 
-      <div className="mb-6 flex items-center justify-between rounded-md border p-4">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-md border p-4">
         <div>
           <p className="text-muted-foreground text-xs">Responsável atual</p>
           <p className="font-medium">
@@ -178,7 +178,7 @@ export default function EquipamentoPage() {
       </div>
 
       <Tabs defaultValue="dados">
-        <TabsList>
+        <TabsList className="max-w-full overflow-x-auto">
           <TabsTrigger value="dados">Dados gerais</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="manutencoes">Manutenções</TabsTrigger>
@@ -198,7 +198,7 @@ export default function EquipamentoPage() {
             {temDadosDeRede && (
               <div className="border-t px-5 py-4">
                 <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">Rede</p>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <CampoDado label="IP local" valor={equipamento.ipLocal} />
                   <CampoDado label="MAC" valor={equipamento.macAddress} />
                   <CampoDado label="Ramal" valor={equipamento.numeroRamal} />
@@ -208,7 +208,7 @@ export default function EquipamentoPage() {
           </div>
 
           {equipamento.status === "BAIXADO" && (
-            <div className="mt-4 flex items-start justify-between gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
+            <div className="mt-4 flex flex-wrap items-start justify-between gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-3">
               <div>
                 <p className="font-medium text-destructive">Equipamento baixado</p>
                 <p className="text-muted-foreground text-xs">

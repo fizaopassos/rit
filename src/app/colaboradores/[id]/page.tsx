@@ -92,17 +92,17 @@ export default function ColaboradorPage() {
   }
 
   if (carregando) {
-    return <p className="text-muted-foreground p-8 text-sm">Carregando...</p>;
+    return <p className="text-muted-foreground p-4 text-sm sm:p-8">Carregando...</p>;
   }
 
   if (!colaborador) {
-    return <p className="text-muted-foreground p-8 text-sm">Colaborador não encontrado.</p>;
+    return <p className="text-muted-foreground p-4 text-sm sm:p-8">Colaborador não encontrado.</p>;
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <div className="mx-auto max-w-3xl p-4 sm:p-8">
       <Card className="mb-6">
-        <CardContent className="flex items-start justify-between px-6 py-5">
+        <CardContent className="flex flex-wrap items-start justify-between gap-3 px-4 py-5 sm:px-6">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{colaborador.nome}</h1>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -125,9 +125,9 @@ export default function ColaboradorPage() {
         </CardContent>
       </Card>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-medium">Equipamentos vinculados</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <VincularEquipamentoColaboradorDialog colaboradorId={colaborador.id} onVinculado={carregar} />
           <DevolverEmLoteDialog
             colaboradorId={colaborador.id}

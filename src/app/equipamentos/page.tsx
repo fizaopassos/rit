@@ -86,7 +86,7 @@ export default function EquipamentosPage() {
   }, [equipamentos, busca, filtroStatus, filtroTipo]);
 
   return (
-    <div className="mx-auto max-w-6xl p-8">
+    <div className="mx-auto max-w-6xl p-4 sm:p-8">
       <PageHeader
         title="Equipamentos"
         description="Parque de equipamentos de tecnologia da Retha."
@@ -120,8 +120,8 @@ export default function EquipamentosPage() {
             className="pl-9"
           />
         </div>
-        <Select value={filtroStatus} onValueChange={(v) => v && setFiltroStatus(v)}>
-          <SelectTrigger className="sm:w-44">
+        <Select items={{ TODOS: "Todos os status", ...STATUS_EQUIPAMENTO_LABEL }} value={filtroStatus} onValueChange={(v) => v && setFiltroStatus(v)}>
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -131,8 +131,8 @@ export default function EquipamentosPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filtroTipo} onValueChange={(v) => v && setFiltroTipo(v)}>
-          <SelectTrigger className="sm:w-44">
+        <Select items={{ TODOS: "Todos os tipos", ...TIPO_EQUIPAMENTO_LABEL }} value={filtroTipo} onValueChange={(v) => v && setFiltroTipo(v)}>
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

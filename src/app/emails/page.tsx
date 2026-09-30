@@ -64,7 +64,7 @@ export default function EmailsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <div className="mx-auto max-w-3xl p-4 sm:p-8">
       <PageHeader
         title="Emails Workspace"
         description="Pessoal (colaborador) ou genérico (condomínio, com responsável atual)."

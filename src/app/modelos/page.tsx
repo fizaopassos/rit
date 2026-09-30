@@ -58,7 +58,7 @@ export default function ModelosPage() {
   }, [modelos, busca]);
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <div className="mx-auto max-w-3xl p-4 sm:p-8">
       <PageHeader
         title="Modelos"
         description="Modelos vinculados a uma marca, reutilizados no cadastro de equipamento."

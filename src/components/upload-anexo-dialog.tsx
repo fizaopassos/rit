@@ -106,7 +106,7 @@ export function UploadAnexoDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={tipo} onValueChange={(v) => setTipo(v ?? undefined)}>
+            <Select items={TIPO_LABEL} value={tipo} onValueChange={(v) => setTipo(v ?? undefined)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>

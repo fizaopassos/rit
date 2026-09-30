@@ -83,7 +83,7 @@ export function BaixarEquipamentoDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Motivo</Label>
-            <Select value={motivo} onValueChange={(v) => setMotivo(v ?? undefined)}>
+            <Select items={MOTIVO_BAIXA_LABEL} value={motivo} onValueChange={(v) => setMotivo(v ?? undefined)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>

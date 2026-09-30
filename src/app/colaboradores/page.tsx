@@ -74,7 +74,7 @@ export default function ColaboradoresPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
+    <div className="mx-auto max-w-5xl p-4 sm:p-8">
       <PageHeader
         title="Colaboradores"
         description={

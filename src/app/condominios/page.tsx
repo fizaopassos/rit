@@ -54,7 +54,7 @@ export default function CondominiosPage() {
   }, [condominios, busca]);
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <div className="mx-auto max-w-3xl p-4 sm:p-8">
       <PageHeader
         title="Condomínios"
         description="Condomínios administrados pela Retha."

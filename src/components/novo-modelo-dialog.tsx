@@ -130,6 +130,7 @@ export function NovoModeloDialog({ onCriado }: { onCriado: () => void }) {
           <div className="space-y-2">
             <Label>Tipo de equipamento</Label>
             <Select
+              items={TIPO_EQUIPAMENTO_LABEL}
               value={tipoEquipamento}
               onValueChange={(v) => setTipoEquipamento(v ?? undefined)}
             >

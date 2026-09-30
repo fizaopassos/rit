@@ -99,7 +99,7 @@ export function NovaManutencaoDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select value={tipo} onValueChange={(v) => setTipo(v ?? undefined)}>
+              <Select items={TIPO_MANUTENCAO_LABEL} value={tipo} onValueChange={(v) => setTipo(v ?? undefined)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>

@@ -46,7 +46,7 @@ export default function UsuariosPage() {
   }, [carregar]);
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <PageHeader
         title="Usuários do sistema"
         description="Quem tem login no RIT — TI (Admin) ou recepção (Consulta)."

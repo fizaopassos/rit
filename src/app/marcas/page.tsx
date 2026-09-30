@@ -51,7 +51,7 @@ export default function MarcasPage() {
   }, [marcas, busca]);
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <PageHeader
         title="Marcas"
         description="Cadastro reutilizável de marcas de equipamento."

@@ -70,7 +70,7 @@ export default function LinhasPage() {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <div className="mx-auto max-w-4xl p-4 sm:p-8">
       <PageHeader
         title="Linhas móveis"
         description="Chips vinculados a colaboradores, com controle de cobrança."
