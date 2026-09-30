@@ -98,16 +98,16 @@ EOF
 link_shared() {
   local rel=$1 f
   for f in "${SHARED_FILES[@]}"; do
-    ssh "$VPS" "ln -sfn $SHARED/$f $rel/$f"
+    ssh -n "$VPS" "ln -sfn $SHARED/$f $rel/$f"
   done
 }
 
 deploy() {
   build
 
-  ssh "$VPS" "[ -L $CURRENT ]" || die "$CURRENT na VPS não é symlink — rode 'scripts/deploy.sh setup' uma vez antes"
+  ssh -n "$VPS" "[ -L $CURRENT ]" || die "$CURRENT na VPS não é symlink — rode 'scripts/deploy.sh setup' uma vez antes"
   local prev rel
-  prev=$(ssh "$VPS" readlink -f "$CURRENT")
+  prev=$(ssh -n "$VPS" readlink -f "$CURRENT")
   rel="$RELEASES/$(date +%Y%m%d-%H%M%S)-$SHA"
 
   log "Enviando para $VPS:$rel"
@@ -119,16 +119,16 @@ deploy() {
   # O Chrome do Puppeteer (comodato/checklist) mora em /root/.cache/puppeteer,
   # fora do node_modules — se a versão do puppeteer mudou, baixa a nova. Idempotente.
   log "Conferindo Chrome do Puppeteer"
-  ssh "$VPS" "cd $rel && npx puppeteer browsers install chrome >/dev/null"
+  ssh -n "$VPS" "cd $rel && npx puppeteer browsers install chrome >/dev/null"
 
   log "Verificando migrations pendentes"
   local status
-  status=$(ssh "$VPS" "cd $rel && npx prisma migrate status 2>&1" || true)
+  status=$(ssh -n "$VPS" "cd $rel && npx prisma migrate status 2>&1" || true)
   if ! grep -q "Database schema is up to date" <<<"$status"; then
     echo "$status"
-    read -r -p "Há migrations pendentes (acima). Aplicar em PRODUÇÃO agora? [s/N] " ans
+    read -r -p "Há migrations pendentes (acima). Aplicar em PRODUÇÃO agora? [s/N] " ans || ans=""
     [ "$ans" = s ] || die "deploy interrompido antes da troca; produção não foi alterada ($rel ficou na VPS sem uso)"
-    ssh "$VPS" "cd $rel && npx prisma migrate deploy"
+    ssh -n "$VPS" "cd $rel && npx prisma migrate deploy"
   fi
 
   log "Trocando para $rel e reiniciando $PM2_APP"
@@ -141,7 +141,7 @@ deploy() {
   fi
 
   log "Removendo releases antigas (mantém $KEEP)"
-  ssh "$VPS" bash -s -- "$RELEASES" "$KEEP" "$(ssh "$VPS" readlink -f "$CURRENT")" <<'EOF'
+  ssh "$VPS" bash -s -- "$RELEASES" "$KEEP" "$(ssh -n "$VPS" readlink -f "$CURRENT")" <<'EOF'
 ls -1d "$1"/*/ | sed 's#/$##' | sort | head -n -"$2" | while read -r old; do
   [ "$old" = "$3" ] || rm -rf -- "$old"
 done
@@ -152,14 +152,14 @@ EOF
 
 rollback() {
   local cur target
-  cur=$(ssh "$VPS" readlink -f "$CURRENT")
+  cur=$(ssh -n "$VPS" readlink -f "$CURRENT")
   if [ -n "${1:-}" ]; then
     target="$RELEASES/$1"
   else
-    target=$(ssh "$VPS" "ls -1d $RELEASES/*/ | sed 's#/\$##' | sort" | grep -B1 -Fx "$cur" | head -n1)
+    target=$(ssh -n "$VPS" "ls -1d $RELEASES/*/ | sed 's#/\$##' | sort" | grep -B1 -Fx "$cur" | head -n1)
     [ "$target" != "$cur" ] || die "não há release anterior à ativa"
   fi
-  ssh "$VPS" "[ -d $target ]" || die "release não encontrada: $target"
+  ssh -n "$VPS" "[ -d $target ]" || die "release não encontrada: $target"
 
   log "Rollback: $cur -> $target"
   switch_to "$target"
@@ -181,8 +181,8 @@ EOF
 # primeira release, sem reiniciar nada — o processo do pm2 segue rodando e o
 # caminho /root/rit continua válido via symlink.
 setup() {
-  ssh "$VPS" "[ -d $CURRENT ] && [ ! -L $CURRENT ]" || die "$CURRENT já é symlink (setup já feito) ou não existe"
-  read -r -p "Converter $VPS:$CURRENT para o layout de releases? [s/N] " ans
+  ssh -n "$VPS" "[ -d $CURRENT ] && [ ! -L $CURRENT ]" || die "$CURRENT já é symlink (setup já feito) ou não existe"
+  read -r -p "Converter $VPS:$CURRENT para o layout de releases? [s/N] " ans || ans=""
   [ "$ans" = s ] || die "setup cancelado"
 
   ssh "$VPS" bash -s -- "$CURRENT" "$RELEASES" "$SHARED" "${SHARED_FILES[@]}" <<'EOF'
