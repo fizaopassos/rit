@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { violouUnico } from "@/lib/prisma-erros";
 import { buscarEquipamento } from "@/services/alocacoes.service";
 import { atualizarEquipamento } from "@/services/equipamentos.service";
 
@@ -30,7 +31,7 @@ const TIPOS = [
 const schema = z.object({
   modeloId: z.string().min(1),
   tipoEquipamento: z.enum(TIPOS),
-  numeroSerie: z.string().optional(),
+  numeroSerie: z.string().trim().optional().transform((v) => v || undefined),
   notaFiscalNumero: z.string().optional(),
   notaFiscalValor: z.number().positive().optional(),
   notaFiscalData: z.string().optional(),
@@ -53,6 +54,16 @@ export async function PATCH(
     return NextResponse.json({ erro: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const equipamento = await atualizarEquipamento(id, parsed.data);
-  return NextResponse.json({ id: equipamento.id });
+  try {
+    const equipamento = await atualizarEquipamento(id, parsed.data);
+    return NextResponse.json({ id: equipamento.id });
+  } catch (err) {
+    if (violouUnico(err, "numeroSerie")) {
+      return NextResponse.json(
+        { erro: "Já existe um equipamento com esse número de série" },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 }

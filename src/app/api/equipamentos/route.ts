@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { violouUnico } from "@/lib/prisma-erros";
 import { listarEquipamentos, criarEquipamento } from "@/services/equipamentos.service";
 
 export async function GET() {
@@ -20,7 +21,7 @@ const TIPOS = [
 const criarSchema = z.object({
   modeloId: z.string().min(1, "Modelo é obrigatório"),
   tipoEquipamento: z.enum(TIPOS),
-  numeroSerie: z.string().optional(),
+  numeroSerie: z.string().trim().optional().transform((v) => v || undefined),
   proprietarioTipo: z.enum(["ADMINISTRADORA", "ASSOCIACAO_CONDOMINIO"]),
   condominioId: z.string().min(1, "Condomínio é obrigatório"),
   notaFiscalNumero: z.string().optional(),
@@ -44,6 +45,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const equipamento = await criarEquipamento(parsed.data);
-  return NextResponse.json(equipamento, { status: 201 });
+  try {
+    const equipamento = await criarEquipamento(parsed.data);
+    return NextResponse.json(equipamento, { status: 201 });
+  } catch (err) {
+    if (violouUnico(err, "numeroSerie")) {
+      return NextResponse.json(
+        { erro: "Já existe um equipamento com esse número de série" },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 }
