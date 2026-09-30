@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { autenticar } from "@/services/auth.service";
+import { loginBloqueado, registrarFalhaLogin, limparFalhasLogin } from "@/lib/limite-login";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -18,11 +19,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const resultado = await autenticar(parsed.data.email, parsed.data.senha);
+  const { email, senha } = parsed.data;
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || null;
+
+  const minutos = loginBloqueado(email, ip);
+  if (minutos !== null) {
+    return NextResponse.json(
+      { erro: `Muitas tentativas de login. Tente de novo em ${minutos} min.` },
+      { status: 429 },
+    );
+  }
+
+  const resultado = await autenticar(email, senha);
 
   if (!resultado) {
+    registrarFalhaLogin(email, ip);
     return NextResponse.json({ erro: "Credenciais inválidas" }, { status: 401 });
   }
+
+  limparFalhasLogin(email);
 
   const response = NextResponse.json({
     nome: resultado.usuario.nome,

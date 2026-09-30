@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listarLinhas, criarLinha } from "@/services/linhas.service";
+import { autorizarApi } from "@/lib/sessao";
 
 export async function GET() {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const linhas = await listarLinhas();
   return NextResponse.json(linhas);
 }
@@ -17,6 +21,9 @@ const criarSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const body = await req.json();
   const parsed = criarSchema.safeParse(body);
 

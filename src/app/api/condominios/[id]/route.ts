@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { atualizarCondominio } from "@/services/condominios.service";
+import { autorizarApi } from "@/lib/sessao";
 
 const schema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
@@ -12,6 +13,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const body = await req.json();
   const parsed = schema.safeParse(body);

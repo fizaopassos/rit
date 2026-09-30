@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listarEmails, criarEmail } from "@/services/emails.service";
+import { autorizarApi } from "@/lib/sessao";
 
 export async function GET() {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const emails = await listarEmails();
   return NextResponse.json(emails);
 }
@@ -14,6 +18,9 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
 

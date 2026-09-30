@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gerarChecklistPdf } from "@/services/documentos.service";
 import { paraArrayBuffer } from "@/lib/pdf-utils";
+import { autorizarApi } from "@/lib/sessao";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ alocacaoId: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { alocacaoId } = await params;
 
   try {
-    const pdf = await gerarChecklistPdf(alocacaoId);
+    const pdf = await gerarChecklistPdf(alocacaoId, acesso.sessao.sub);
     return new NextResponse(paraArrayBuffer(pdf), {
       headers: {
         "Content-Type": "application/pdf",

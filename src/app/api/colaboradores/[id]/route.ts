@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { buscarColaborador, atualizarColaborador } from "@/services/colaboradores.service";
+import { autorizarApi } from "@/lib/sessao";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const colaborador = await buscarColaborador(id);
 
@@ -31,6 +36,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const body = await req.json();
   const parsed = schema.safeParse(body);
@@ -40,5 +48,18 @@ export async function PATCH(
   }
 
   const colaborador = await atualizarColaborador(id, parsed.data);
+
+  if (parsed.data.cpf) {
+    await prisma.logAuditoria.create({
+      data: {
+        appUsuarioId: acesso.sessao.sub,
+        acao: "ALTEROU_CPF",
+        entidade: "Colaborador",
+        entidadeId: id,
+        campoSensivel: true,
+      },
+    });
+  }
+
   return NextResponse.json({ id: colaborador.id });
 }

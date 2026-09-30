@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listarColaboradoresParaPerfil, criarColaborador } from "@/services/colaboradores.service";
-import { verificarSessao } from "@/services/auth.service";
+import { autorizarApi } from "@/lib/sessao";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest) {
-  const token = req.cookies.get("rit_session")?.value;
-  const sessao = token ? await verificarSessao(token) : null;
-  return NextResponse.json(await listarColaboradoresParaPerfil(sessao?.perfil ?? "CONSULTA"));
+export async function GET() {
+  const acesso = await autorizarApi();
+  if (!acesso.ok) return acesso.resposta;
+
+  return NextResponse.json(await listarColaboradoresParaPerfil(acesso.sessao.perfil));
 }
 
 const criarSchema = z.object({
@@ -20,6 +22,9 @@ const criarSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const body = await req.json();
   const parsed = criarSchema.safeParse(body);
 
@@ -31,5 +36,19 @@ export async function POST(req: NextRequest) {
   }
 
   const colaborador = await criarColaborador(parsed.data);
-  return NextResponse.json(colaborador, { status: 201 });
+
+  if (parsed.data.cpf) {
+    await prisma.logAuditoria.create({
+      data: {
+        appUsuarioId: acesso.sessao.sub,
+        acao: "DEFINIU_CPF",
+        entidade: "Colaborador",
+        entidadeId: colaborador.id,
+        campoSensivel: true,
+      },
+    });
+  }
+
+  // Só o necessário — o registro completo traz o CPF cifrado
+  return NextResponse.json({ id: colaborador.id, nome: colaborador.nome }, { status: 201 });
 }

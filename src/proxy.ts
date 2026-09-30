@@ -71,5 +71,10 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|ico|webp)$).*)"],
+  matcher: [
+    // Páginas: pula arquivos estáticos (logo do login precisa abrir sem sessão)
+    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|ico|webp)$).*)",
+    // API: sempre passa pelo proxy — /api/x/abc.png não pode escapar do login
+    "/api/:path*",
+  ],
 };

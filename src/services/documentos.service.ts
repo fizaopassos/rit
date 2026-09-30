@@ -2,6 +2,7 @@ import puppeteer from "puppeteer";
 import { prisma } from "@/lib/prisma";
 import { decifrarCpf } from "@/lib/cpf";
 import { buildComodatoHtml, buildChecklistHtml, buildChecklistHtmlLote } from "@/lib/pdf-templates";
+import { ErroNegocio } from "@/lib/erros";
 
 // O CPF fica cifrado no banco o tempo todo — só é decifrado aqui, no momento
 // exato de montar o documento, nunca fica em texto puro em nenhum outro lugar.
@@ -70,23 +71,46 @@ async function renderizarPdf(html: string): Promise<Buffer> {
   }
 }
 
-export async function gerarComodatoPdf(alocacaoId: string) {
-  const alocacao = await buscarAlocacaoParaDocumento(alocacaoId);
-  const html = buildComodatoHtml(alocacao);
-  return renderizarPdf(html);
+// Comodato e checklist imprimem o CPF completo — então gerar o documento é
+// registrado igual ao "Ver CPF" (mesma entidade/id), pra auditoria por
+// colaborador mostrar os dois caminhos até o dado.
+async function registrarDocumento(
+  appUsuarioId: string,
+  acao: "GEROU_COMODATO" | "GEROU_CHECKLIST",
+  colaboradores: { id: string; cpf: string | null }[],
+) {
+  const unicos = new Map(colaboradores.map((c) => [c.id, c]));
+  await prisma.logAuditoria.createMany({
+    data: [...unicos.values()].map((c) => ({
+      appUsuarioId,
+      acao,
+      entidade: "Colaborador",
+      entidadeId: c.id,
+      campoSensivel: c.cpf !== null,
+    })),
+  });
 }
 
-export async function gerarChecklistPdf(alocacaoId: string) {
+export async function gerarComodatoPdf(alocacaoId: string, appUsuarioId: string) {
   const alocacao = await buscarAlocacaoParaDocumento(alocacaoId);
-  const html = buildChecklistHtml(alocacao);
-  return renderizarPdf(html);
+  const pdf = await renderizarPdf(buildComodatoHtml(alocacao));
+  await registrarDocumento(appUsuarioId, "GEROU_COMODATO", [alocacao.colaborador]);
+  return pdf;
 }
 
-export async function gerarChecklistPdfLote(alocacaoIds: string[]) {
+export async function gerarChecklistPdf(alocacaoId: string, appUsuarioId: string) {
+  const alocacao = await buscarAlocacaoParaDocumento(alocacaoId);
+  const pdf = await renderizarPdf(buildChecklistHtml(alocacao));
+  await registrarDocumento(appUsuarioId, "GEROU_CHECKLIST", [alocacao.colaborador]);
+  return pdf;
+}
+
+export async function gerarChecklistPdfLote(alocacaoIds: string[], appUsuarioId: string) {
   const alocacoes = await buscarAlocacoesParaDocumento(alocacaoIds);
   if (alocacoes.length === 0) {
-    throw new Error("Nenhuma alocação encontrada para os IDs informados");
+    throw new ErroNegocio("Nenhuma alocação encontrada para os IDs informados");
   }
-  const html = buildChecklistHtmlLote(alocacoes);
-  return renderizarPdf(html);
+  const pdf = await renderizarPdf(buildChecklistHtmlLote(alocacoes));
+  await registrarDocumento(appUsuarioId, "GEROU_CHECKLIST", alocacoes.map((a) => a.colaborador));
+  return pdf;
 }

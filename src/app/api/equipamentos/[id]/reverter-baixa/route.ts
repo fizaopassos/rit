@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { reverterBaixa } from "@/services/baixa.service";
-import { verificarSessao } from "@/services/auth.service";
+import { autorizarApi } from "@/lib/sessao";
+import { respostaDeErro } from "@/lib/erros";
 
 const schema = z.object({
   justificativa: z.string().trim().min(5),
@@ -11,15 +12,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
 
-  // O proxy.ts já restringe /api/equipamentos ao Admin; a sessão aqui é
-  // pra saber quem reverteu e registrar no LogAuditoria.
-  const token = req.cookies.get("rit_session")?.value;
-  const sessao = token ? await verificarSessao(token) : null;
-  if (!sessao || sessao.perfil !== "ADMIN") {
-    return NextResponse.json({ erro: "Acesso restrito" }, { status: 403 });
-  }
+  const { id } = await params;
 
   const body = await req.json();
   const parsed = schema.safeParse(body);
@@ -32,10 +28,9 @@ export async function POST(
   }
 
   try {
-    await reverterBaixa(id, parsed.data.justificativa, sessao.sub);
+    await reverterBaixa(id, parsed.data.justificativa, acesso.sessao.sub);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const mensagem = err instanceof Error ? err.message : "Erro ao reverter baixa";
-    return NextResponse.json({ erro: mensagem }, { status: 409 });
+    return respostaDeErro(err, "Erro ao reverter baixa");
   }
 }

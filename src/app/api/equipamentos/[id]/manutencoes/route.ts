@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { criarManutencao } from "@/services/manutencoes.service";
+import { autorizarApi } from "@/lib/sessao";
 
 const TIPOS = ["PREVENTIVA", "CORRETIVA", "TROCA_PECA"] as const;
 
@@ -17,6 +18,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const body = await req.json();
   const parsed = schema.safeParse(body);

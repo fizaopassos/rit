@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { MotivoDevolucao } from "@prisma/client";
+import { ErroNegocio } from "@/lib/erros";
 
 export async function buscarEquipamento(id: string) {
   return prisma.equipamento.findUnique({
@@ -27,7 +28,7 @@ export async function vincularEquipamento(
   });
 
   if (equipamento.status === "EM_USO") {
-    throw new Error("Equipamento já está em uso — devolva antes de vincular a outro colaborador");
+    throw new ErroNegocio("Equipamento já está em uso — devolva antes de vincular a outro colaborador");
   }
 
   return prisma.$transaction([
@@ -57,7 +58,7 @@ export async function devolverEquipamento(
   });
 
   if (!alocacaoAberta) {
-    throw new Error("Nenhuma alocação em aberto para este equipamento");
+    throw new ErroNegocio("Nenhuma alocação em aberto para este equipamento");
   }
 
   return prisma.$transaction([
@@ -86,7 +87,7 @@ export async function devolverEquipamentosEmLote(
   });
 
   if (alocacoesAbertas.length === 0) {
-    throw new Error("Nenhuma alocação em aberto encontrada para os equipamentos selecionados");
+    throw new ErroNegocio("Nenhuma alocação em aberto encontrada para os equipamentos selecionados");
   }
 
   const agora = new Date();

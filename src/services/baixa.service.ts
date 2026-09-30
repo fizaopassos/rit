@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { MotivoBaixa } from "@prisma/client";
 import { MOTIVO_BAIXA_LABEL } from "@/lib/rotulos";
+import { ErroNegocio } from "@/lib/erros";
 
 export async function baixarEquipamento(
   equipamentoId: string,
@@ -12,11 +13,11 @@ export async function baixarEquipamento(
   });
 
   if (equipamento.status === "EM_USO") {
-    throw new Error("Devolva o equipamento antes de dar baixa");
+    throw new ErroNegocio("Devolva o equipamento antes de dar baixa");
   }
 
   if (equipamento.status === "BAIXADO") {
-    throw new Error("Equipamento já está baixado");
+    throw new ErroNegocio("Equipamento já está baixado");
   }
 
   return prisma.equipamento.update({
@@ -44,7 +45,7 @@ export async function reverterBaixa(
   });
 
   if (equipamento.status !== "BAIXADO") {
-    throw new Error("Equipamento não está baixado");
+    throw new ErroNegocio("Equipamento não está baixado");
   }
 
   const hoje = new Date().toLocaleDateString("pt-BR");

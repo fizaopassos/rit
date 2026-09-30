@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { devolverEquipamentosEmLote } from "@/services/alocacoes.service";
+import { autorizarApi } from "@/lib/sessao";
+import { respostaDeErro } from "@/lib/erros";
 
 const MOTIVOS = [
   "SAIDA_FUNCIONARIO",
@@ -19,6 +21,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const body = await req.json();
   const parsed = schema.safeParse(body);
@@ -39,7 +44,6 @@ export async function POST(
     );
     return NextResponse.json({ alocacaoIds });
   } catch (err) {
-    const mensagem = err instanceof Error ? err.message : "Erro ao devolver";
-    return NextResponse.json({ erro: mensagem }, { status: 409 });
+    return respostaDeErro(err, "Erro ao devolver");
   }
 }

@@ -3,11 +3,15 @@ import { z } from "zod";
 import { violouUnico } from "@/lib/prisma-erros";
 import { buscarEquipamento } from "@/services/alocacoes.service";
 import { atualizarEquipamento } from "@/services/equipamentos.service";
+import { autorizarApi } from "@/lib/sessao";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const equipamento = await buscarEquipamento(id);
 
@@ -46,6 +50,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const acesso = await autorizarApi("ADMIN");
+  if (!acesso.ok) return acesso.resposta;
+
   const { id } = await params;
   const body = await req.json();
   const parsed = schema.safeParse(body);
