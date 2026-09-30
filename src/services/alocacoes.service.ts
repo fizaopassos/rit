@@ -9,7 +9,7 @@ export async function buscarEquipamento(id: string) {
       condominio: true,
       alocacoes: {
         orderBy: { dataInicio: "desc" },
-        include: { colaborador: true },
+        include: { colaborador: { select: { id: true, nome: true } } },
       },
       manutencoes: { orderBy: { data: "desc" } },
       anexos: { orderBy: { criadoEm: "desc" } },

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 export async function listarLinhas() {
   return prisma.linha.findMany({
     orderBy: { criadoEm: "desc" },
-    include: { colaborador: true },
+    include: { colaborador: { select: { id: true, nome: true, status: true } } },
   });
 }
 

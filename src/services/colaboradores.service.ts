@@ -23,6 +23,16 @@ export async function listarColaboradores() {
   }));
 }
 
+// Perfil Consulta só recebe o essencial — nunca cargo, condomínio, CPF etc. —
+// e só colaboradores ativos (contato de quem já saiu não serve pra recepção).
+export async function listarColaboradoresParaPerfil(perfil: "ADMIN" | "CONSULTA") {
+  const colaboradores = await listarColaboradores();
+  if (perfil === "ADMIN") return colaboradores;
+  return colaboradores
+    .filter((c) => c.status === "ATIVO")
+    .map((c) => ({ id: c.id, nome: c.nome, telefone: c.telefone, email: c.email }));
+}
+
 export async function criarColaborador(dados: {
   nome: string;
   cpf?: string;

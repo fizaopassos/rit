@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 export async function listarEmails() {
   return prisma.emailWorkspace.findMany({
     orderBy: { email: "asc" },
-    include: { colaborador: true, condominio: true },
+    include: { colaborador: { select: { id: true, nome: true, status: true } }, condominio: true },
   });
 }
 
